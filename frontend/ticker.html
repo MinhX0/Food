@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CIIS - Consumer Investment Insight System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+    <link rel="stylesheet" href="newcss.css" />
+    <style>
+      .gradient-bg {
+        background: linear-gradient(135deg, #1a365d 0%, #2a5298 100%);
+      }
+      body {
+        background-color: #f3f4f6;
+        background-image: 
+          radial-gradient(circle at 100% 100%, #ffffff 0, #ffffff 3px, transparent 3px),
+          radial-gradient(circle at 0 0, #ffffff 0, #ffffff 3px, transparent 3px),
+          repeating-linear-gradient(0deg, #e5e7eb 0, #e5e7eb 1px, transparent 1px, transparent 20px),
+          repeating-linear-gradient(90deg, #e5e7eb 0, #e5e7eb 1px, #f3f4f6 1px, #f3f4f6 20px);
+        background-size: 20px 20px;
+        position: relative;
+      }
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: 
+          linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%),
+          linear-gradient(45deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%);
+        pointer-events: none;
+        z-index: 0;
+      }
+      .card-hover {
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+        background: rgba(255, 255, 255, 0.95);
+      }
+      .card-hover:hover {
+        transform: translateY(-5px);
+        box-shadow: 
+          0 10px 20px rgba(0, 0, 0, 0.1),
+          0 6px 6px rgba(0, 0, 0, 0.06);
+        background: rgba(255, 255, 255, 0.98);
+      }
+      .animated-text {
+        background: linear-gradient(90deg, #0072ff, #00c6ff);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: gradient 3s ease infinite;
+        background-size: 200% auto;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      }
+      @keyframes gradient {
+        0% { background-position: 0% center; }
+        50% { background-position: 100% center; }
+        100% { background-position: 0% center; }
+      }
+      .pinned-stock {
+        border-left: 4px solid #3b82f6;
+        background-color: rgba(248, 250, 252, 0.95);
+        backdrop-filter: blur(5px);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        height: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: rgba(241, 241, 241, 0.8);
+        backdrop-filter: blur(5px);
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: rgba(136, 136, 136, 0.8);
+        border-radius: 10px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: rgba(85, 85, 85, 0.9);
+      }
+      .bg-white {
+        background-color: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        box-shadow: 
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+      .navbar-ombre {
+        background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+        box-shadow: 
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      }
+
+      /* Text Note Styling */
+      #text-note {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        padding: 1.5rem 2rem;
+        border-radius: 1rem;
+        box-shadow: 
+          0 4px 6px -1px rgba(0, 0, 0, 0.1),
+          0 2px 4px -1px rgba(0, 0, 0, 0.06),
+          0 0 0 1px rgba(0, 0, 0, 0.05);
+        position: relative;
+        transition: all 0.3s ease;
+        border-left: 4px solid #3b82f6;
+      }
+
+      #text-note::before {
+        content: '💡 Khuyến nghị';
+        display: block;
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: #3b82f6;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      #text-note:hover {
+        transform: translateY(-2px);
+        box-shadow: 
+          0 10px 15px -3px rgba(0, 0, 0, 0.1),
+          0 4px 6px -2px rgba(0, 0, 0, 0.05),
+          0 0 0 1px rgba(0, 0, 0, 0.05);
+      }
+    </style>
+  </head>
+  <body class="bg-gray-100">
+    <!-- Navigation -->
+    <nav class="navbar-ombre text-white p-4 shadow-md">
+      <div class="container mx-auto flex justify-between items-center">
+        <div class="flex items-center space-x-2">
+          <a href="index.html">
+            <img
+              src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/e8aad51a-599e-4a12-b08e-c55418a5118b.png"
+              alt="CIIS Logo"
+              class="h-10"
+            />
+          </a>
+          <h1 class="text-xl font-bold">CIIS</h1>
+        </div>
+        <div class="space-x-6 hidden md:flex">
+          <a href="index.html" class="hover:text-blue-300">Dashboard</a>
+          <a
+            href="requeststocks.html"
+            id="investSuggestBtn"
+            class="hover:text-blue-300"
+            >Gợi ý đầu tư</a
+          >
+          <a href="#footer" id="aboutUsBtn" class="hover:text-blue-300"
+            >About us</a
+          >
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-8">
+      <!-- Header and Stock Selection -->
+      <div class="mb-10">
+        <div class="text-center mb-6">
+          <h2 class="text-4xl font-bold mb-4 animated-text">
+            Thông tin cổ phiếu
+          </h2>
+          <p class="text-gray-600" id="tickerDesc1">
+            Thông tin chi tiết về mã cổ phiếu
+          </p>
+          <p class="text-gray-600" id="tickerDesc"></p>
+        </div>
+      </div>
+      <div class="max-w-4xl mx-auto px-4">
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 gap-8 mb-10">
+          <!-- Consumer Behavior Chart -->
+
+          <!-- Stock Price Chart -->
+          <div class="bg-white rounded-lg shadow-md p-6">
+            <div class="flex justify-between items-center mb-4">
+              <h3 class="text-xl font-semibold">Biểu đồ giá cổ phiếu</h3>
+            </div>
+            <canvas id="stockChart" height="300"></canvas>
+          </div>
+          <div class="mt-8">
+            <!-- Prediction Stats Block -->
+            <div id="prediction-stats" class="mb-6 bg-white rounded-lg shadow-md p-6">
+              <h3 class="text-xl font-semibold mb-4">Chỉ số dự đoán</h3>
+              <div class="grid grid-cols-3 gap-4">
+                <div class="p-4 bg-gray-50 rounded-lg">
+                  <div class="text-sm text-gray-600">Xu hướng</div>
+                  <div id="direction-value" class="text-lg font-semibold"></div>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                  <div class="text-sm text-gray-600">Xác suất tăng</div>
+                  <div id="uptrend-value" class="text-lg font-semibold"></div>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-lg">
+                  <div class="text-sm text-gray-600">Xác suất ổn định</div>
+                  <div id="stable-value" class="text-lg font-semibold"></div>
+                </div>
+              </div>
+            </div>
+            <!-- Investment Advice Block -->
+            <div id="text-note" class="text-lg leading-relaxed"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white py-8 px-4">
+      <div class="container mx-auto">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div>
+            <h3 class="text-xl font-bold mb-4">CIIS</h3>
+            <p class="text-gray-400">Hệ thống phân tích thị trường</p>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold mb-4">Liên hệ</h3>
+            <ul class="text-gray-400 space-y-2">
+              <li><i class="fas fa-envelope mr-2"></i> contact@ciis.vn</li>
+              <li><i class="fas fa-phone mr-2"></i> 0123 456 789</li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-xl font-bold mb-4">Thông tin</h3>
+            <ul class="text-gray-400 space-y-2">
+              <li><a href="#" class="hover:text-white">Điều khoản</a></li>
+              <li><a href="#" class="hover:text-white">Bảo mật</a></li>
+            </ul>
+          </div>
+        </div>
+        <div
+          class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400"
+        >
+          <p>© 2025 CIIS. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+    <!-- Loading Spinner -->
+    <div
+      id="loadingSpinner"
+      style="
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 9999;
+        background: rgba(255, 255, 255, 0.7);
+      "
+      class="flex items-center justify-center"
+    >
+      <div
+        class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-b-4 border-gray-300"
+      ></div>
+    </div>
+
+    <script src="api.js"></script>
+    <script>
+      // Sample data for charts
+      document.addEventListener("DOMContentLoaded", function () {
+        let chartRendering = true;
+        // Patch hideLoading to handle chart rendering state
+        const originalHideLoading = window.hideLoading;
+        window.hideLoading = function () {
+          if (chartRendering) {
+            if (window.showLoading) window.showLoading();
+          } else {
+            if (originalHideLoading) originalHideLoading();
+          }
+        };
+        async function loadTickers() {
+          if (window.showLoading) showLoading();
+          const urlParams = new URLSearchParams(window.location.search);
+          const symbol = urlParams.get("symbol"); // ví dụ: "VIC"
+          document.getElementById("tickerDesc").innerText = symbol;
+
+          const [response, predictionResponse] = await Promise.all([
+            getRequest(`/ticker_data?symbol=${symbol}`),
+            getRequest(`/prediction_data?symbol=${symbol}`),
+          ]);
+          console.log(response.data);
+
+          const simplifiedData = response.data.map((entry) => {
+            const dateKey = Object.keys(entry).find((k) => k.includes("Date"));
+            const closeKey = Object.keys(entry).find((k) =>
+              k.includes("Close")
+            );
+            return {
+              date: entry[dateKey],
+              close: entry[closeKey],
+            };
+          });
+
+          const predictData = predictionResponse.predicted_price;
+
+          // Tính ngày tiếp theo
+          const lastDateObj = new Date(
+            simplifiedData[simplifiedData.length - 1].date
+          );
+          lastDateObj.setUTCDate(lastDateObj.getUTCDate() + 1);
+          const nextDateStr = lastDateObj.toISOString().split("T")[0];
+
+          // Tạo labels và dữ liệu cho chart
+          const chartLabels = simplifiedData
+            .map((item) => item.date)
+            .concat(nextDateStr);
+          const actualPrices = simplifiedData
+            .map((item) => item.close)
+            .concat(null);
+          const predictedPrices = Array(simplifiedData.length)
+            .fill(null)
+            .concat(predictData);
+
+          // Cập nhật các chỉ số dự đoán
+          document.getElementById("direction-value").innerText = predictionResponse.direction;
+          document.getElementById("uptrend-value").innerText = (predictionResponse.probabilities[2] * 100).toFixed(1) + "%";
+          document.getElementById("stable-value").innerText = (predictionResponse.probabilities[1] * 100).toFixed(1) + "%";
+          
+          // Cập nhật khuyến nghị
+          document.getElementById("text-note").innerText = predictionResponse.advice;
+          // Stock Price Chart
+          const stockCtx = document
+            .getElementById("stockChart")
+            .getContext("2d");
+          const stockChart = new Chart(stockCtx, {
+            type: "line",
+            data: {
+              labels: chartLabels,
+              datasets: [
+                {
+                  label: "Giá cổ phiếu: ",
+                  data: actualPrices,
+                  backgroundColor: "rgba(16, 185, 129, 0.2)",
+                  borderColor: "rgba(16, 185, 129, 1)",
+                  tension: 0.4,
+                  fill: true,
+                },
+                {
+                  label: "Giá dự đoán",
+                  data: predictedPrices,
+                  borderColor: "rgba(255,0,0,0)",
+                  backgroundColor: "rgba(255,0,0,1)",
+                  pointRadius: 8,
+                  pointBackgroundColor: "rgba(255,0,0,1)",
+                  showLine: false,
+                },
+              ],
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  display: false,
+                },
+                tooltip: {
+                  callbacks: {
+                    title: (tooltipItems) => {
+                      const datasetLabel = tooltipItems[0].dataset.label;
+                      const originalDate = tooltipItems[0].label;
+                      if (datasetLabel === "Giá dự đoán") {
+                        return "Dự đoán cho ngày " + originalDate;
+                      }
+                      return originalDate; // giữ nguyên với giá thật
+                    },
+                  },
+                },
+              },
+              animation: {
+                onComplete: function () {
+                  chartRendering = false;
+                  if (originalHideLoading) originalHideLoading();
+                },
+              },
+            },
+          });
+        }
+        loadTickers();
+        // Consumer Behavior Chart
+      });
+    </script>
+  </body>
+</html>

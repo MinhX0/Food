@@ -1,0 +1,104 @@
+/* ========================
+   Base Styles
+======================== */
+body {
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #f3f4f6;
+  color: #1f2937;
+  line-height: 1.6;
+}
+
+.navbar-ombre {
+  background: linear-gradient(to right, #1e3a8a, #3b82f6);
+}
+
+.animated-text {
+  background: linear-gradient(90deg, #0072ff, #00c6ff);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: animated-gradient 3s ease infinite;
+  background-size: 200% auto;
+  display: inline-block;
+}
+
+@keyframes animated-gradient {
+  0% { background-position: 0% center; }
+  50% { background-position: 100% center; }
+  100% { background-position: 0% center; }
+}
+
+.card-hover {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  will-change: transform;
+}
+
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+}
+
+.pinned-stock {
+  border-left: 4px solid #3b82f6;
+  background-color: #f8fafc;
+  padding: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-radius: 6px;
+}
+
+.custom-scrollbar {
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.invest-table th {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+
+.invest-table td {
+  font-size: 0.875rem;
+}
+
+.invest-table .profit {
+  color: #16a34a;
+  font-weight: 500;
+}
+
+.invest-table .action-btn {
+  padding: 4px 12px;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.invest-table .buy-btn {
+  background-color: #dbeafe;
+  color: #2563eb;
+}
+
+.invest-table .sell-btn {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
