@@ -156,7 +156,6 @@ def load_user_preferences_from_csv():
         print(f"No user preferences found: {e}")
 
 
-# Helper: Check if cache file is from today
 
 
 # Prefetch ticker data at startup
