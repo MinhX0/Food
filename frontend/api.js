@@ -1,3 +1,4 @@
+const API_BASE_URL = window.API_BASE_URL || "http://backend:8000";
 // Hiển thị và ẩn loading spinner
 window.showLoading = function () {
   const spinner = document.getElementById("loadingSpinner");
@@ -26,64 +27,66 @@ window.getBatchTickerInfo = async function (symbols) {
   }
 };
 
-// Hàm GET
-const localhost = "http://localhost:8000";
 const getRequest = async (url) => {
-  url = localhost + url; // Thêm địa chỉ máy chủ vào URL
-  console.log(url);
-  showLoading();
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-    if (!response.ok) {
-      throw new Error(`GET thất bại: ${response.status}`);
-    }
-    const result = await response.json();
-    hideLoading();
-    return result;
-  } catch (error) {
-    console.error("Lỗi GET:", error);
-    hideLoading();
-    return null;
-  }
-};
-
-// Wrap getRequest để tự động show/hide loading
-if (window.getRequest) {
-  const originalGetRequest = window.getRequest;
-  window.getRequest = async function (...args) {
+  url = API_BASE_URL + url; // Thêm địa chỉ máy chủ vào URL
+  const getRequest = async (url) => {
+    url = API_BASE_URL + url; // Thêm địa chỉ máy chủ vào URL
+    console.log(url);
     showLoading();
     try {
-      const result = await originalGetRequest.apply(this, args);
-      return result;
-    } finally {
+      const response = await fetch(url, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+      if (!response.ok) {
+        throw new Error(`GET thất bại: ${response.status}`);
+      }
+      const result = await response.json();
       hideLoading();
+      return result;
+    } catch (error) {
+      console.error("Lỗi GET:", error);
+      hideLoading();
+      return null;
     }
   };
-}
 
-// Hàm POST
-const postRequest = async (url, data) => {
-  url = localhost + url; // Thêm địa chỉ máy chủ vào URL
-  try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    });
-
-    if (!response.ok) {
-      throw new Error(`POST thất bại: ${response.status}`);
-    }
-    return await response.json();
-  } catch (error) {
-    console.error("Lỗi POST:", error);
-    return null;
+  // Wrap getRequest để tự động show/hide loading
+  if (window.getRequest) {
+    const originalGetRequest = window.getRequest;
+    window.getRequest = async function (...args) {
+      showLoading();
+      try {
+        const result = await originalGetRequest.apply(this, args);
+        return result;
+      } finally {
+        hideLoading();
+      }
+    };
   }
-};
+  const postRequest = async (url, data) => {
+    url = API_BASE_URL + url; // Thêm địa chỉ máy chủ vào URL
+    const postRequest = async (url, data) => {
+      url = API_BASE_URL + url; // Thêm địa chỉ máy chủ vào URL
+      try {
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        });
+
+        if (!response.ok) {
+          throw new Error(`POST thất bại: ${response.status}`);
+        }
+        return await response.json();
+      } catch (error) {
+        console.error("Lỗi POST:", error);
+        return null;
+      }
+    }
+  }
+}
