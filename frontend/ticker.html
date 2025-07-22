@@ -166,14 +166,14 @@
     <div class="container mx-auto px-4 py-8">
       <!-- Header and Stock Selection -->
       <div class="mb-10">
-        <div class="text-center mb-6">
-          <h2 class="text-4xl font-bold mb-4 animated-text">
-            Thông tin cổ phiếu
-          </h2>
-          <p class="text-gray-600" id="tickerDesc1">
-            Thông tin chi tiết về mã cổ phiếu
-          </p>
-          <p class="text-gray-600" id="tickerDesc"></p>
+        <div class="flex flex-col items-center mb-6">
+          <h2 class="text-4xl font-bold mb-4 animated-text">Thông tin cổ phiếu</h2>
+          <div id="ticker-info-card" class="w-full max-w-md bg-white rounded-xl shadow-lg p-6 flex flex-col items-center mb-4 border border-blue-100" style="display:none;">
+            <div class="flex flex-col items-center">
+              <div class="text-2xl font-bold text-blue-700 mb-1" id="ticker-symbol"></div>
+              <div class="text-lg text-gray-700 mb-2" id="ticker-company"></div>
+            </div>
+          </div>
         </div>
       </div>
       <div class="max-w-4xl mx-auto px-4">
@@ -186,7 +186,7 @@
             <div class="flex justify-between items-center mb-4">
               <h3 class="text-xl font-semibold">Biểu đồ giá cổ phiếu</h3>
             </div>
-            <canvas id="stockChart" height="300"></canvas>
+            <canvas id="stockChart" height="180"></canvas>
           </div>
           <div class="mt-8">
             <!-- Prediction Stats Block -->
@@ -280,9 +280,17 @@
         async function loadTickers() {
           if (window.showLoading) showLoading();
           const urlParams = new URLSearchParams(window.location.search);
-          const symbol = urlParams.get("symbol"); // ví dụ: "VIC"
-          document.getElementById("tickerDesc").innerText = symbol;
+          const symbol = urlParams.get("symbol");
 
+          // Fetch ticker info (symbol, company name)
+          const tickerInfo = await getRequest(`/ticker_data?symbol=${symbol}&days=0`);
+          if (tickerInfo && tickerInfo.symbol) {
+            document.getElementById("ticker-info-card").style.display = "flex";
+            document.getElementById("ticker-symbol").innerText = tickerInfo.symbol;
+            document.getElementById("ticker-company").innerText = tickerInfo.company_name || "";
+          }
+
+          // Continue with prediction and chart
           const [response, predictionResponse] = await Promise.all([
             getRequest(`/ticker_data?symbol=${symbol}`),
             getRequest(`/prediction_data?symbol=${symbol}`),
@@ -291,9 +299,7 @@
 
           const simplifiedData = response.data.map((entry) => {
             const dateKey = Object.keys(entry).find((k) => k.includes("Date"));
-            const closeKey = Object.keys(entry).find((k) =>
-              k.includes("Close")
-            );
+            const closeKey = Object.keys(entry).find((k) => k.includes("Close"));
             return {
               date: entry[dateKey],
               close: entry[closeKey],
@@ -303,34 +309,24 @@
           const predictData = predictionResponse.predicted_price;
 
           // Tính ngày tiếp theo
-          const lastDateObj = new Date(
-            simplifiedData[simplifiedData.length - 1].date
-          );
+          const lastDateObj = new Date(simplifiedData[simplifiedData.length - 1].date);
           lastDateObj.setUTCDate(lastDateObj.getUTCDate() + 1);
           const nextDateStr = lastDateObj.toISOString().split("T")[0];
 
           // Tạo labels và dữ liệu cho chart
-          const chartLabels = simplifiedData
-            .map((item) => item.date)
-            .concat(nextDateStr);
-          const actualPrices = simplifiedData
-            .map((item) => item.close)
-            .concat(null);
-          const predictedPrices = Array(simplifiedData.length)
-            .fill(null)
-            .concat(predictData);
+          const chartLabels = simplifiedData.map((item) => item.date).concat(nextDateStr);
+          const actualPrices = simplifiedData.map((item) => item.close).concat(null);
+          const predictedPrices = Array(simplifiedData.length).fill(null).concat(predictData);
 
           // Cập nhật các chỉ số dự đoán
           document.getElementById("direction-value").innerText = predictionResponse.direction;
           document.getElementById("uptrend-value").innerText = (predictionResponse.probabilities[2] * 100).toFixed(1) + "%";
           document.getElementById("stable-value").innerText = (predictionResponse.probabilities[1] * 100).toFixed(1) + "%";
-          
+
           // Cập nhật khuyến nghị
           document.getElementById("text-note").innerText = predictionResponse.advice;
           // Stock Price Chart
-          const stockCtx = document
-            .getElementById("stockChart")
-            .getContext("2d");
+          const stockCtx = document.getElementById("stockChart").getContext("2d");
           const stockChart = new Chart(stockCtx, {
             type: "line",
             data: {

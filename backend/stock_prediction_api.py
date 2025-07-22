@@ -105,7 +105,7 @@ class PredictionRequest(BaseModel):
 
 # Endpoint 2: Get prediction data for a ticker (GET version)
 @app.get("/prediction_data")
-def get_prediction_data(symbol: str = Query(..., description="Ticker symbol, e.g. AAPL"), lookback_days: int = Query(10, description="Lookback days for features")):
+def get_prediction_data(symbol: str = Query(..., description="Ticker symbol, e.g. AAPL"), lookback_days: int = Query(130, description="Lookback days for features")):
     try:
         predictor = StockPredictor(symbol, lookback_days=lookback_days)
         if not predictor.fetch_data():
