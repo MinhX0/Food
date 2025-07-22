@@ -42,54 +42,46 @@ class StockPredictor:
             symbol: Mã cổ phiếu (VD: 'AAPL', 'GOOGL')
             lookback_days: Số ngày lookback để tạo pattern (mặc định 10 ngày)
         """
-        self.symbol = symbol
-        self.lookback_days = lookback_days
-        self.scaler = StandardScaler()
-        self.model = RandomForestClassifier(n_estimators=100, random_state=42)
-        self.price_model = RandomForestRegressor(n_estimators=100, random_state=42)
+        self.symbol = symbol  # Mã cổ phiếu cần dự đoán
+        self.lookback_days = lookback_days  # Số ngày dùng để tạo pattern đặc trưng
+        self.scaler = StandardScaler()  # Chuẩn hóa dữ liệu đầu vào
+        self.model = RandomForestClassifier(n_estimators=100, random_state=42)  # Mô hình phân loại hướng biến động
+        self.price_model = RandomForestRegressor(n_estimators=100, random_state=42)  # Mô hình dự đoán giá
         
     def fetch_data(self):
         """Lấy dữ liệu cổ phiếu từ yfinance"""
         try:
             print(f"Đang lấy dữ liệu cho {self.symbol}...")
-            # Lấy dữ liệu 1 năm + thêm buffer
+            # Lấy dữ liệu giá 1 năm gần nhất
             self.data = yf.download(self.symbol, period="1y", interval="1d")
-            
             if self.data.empty:
-                raise ValueError(f"Không thể lấy dữ liệu cho mã {self.symbol}")
-            
+                raise ValueError(f"Không thể lấy dữ liệu cho mã {self.symbol}")  # Nếu không có dữ liệu thì báo lỗi
+
             # Lấy tên công ty từ yfinance
-            try:
-                ticker_obj = yf.Ticker(self.symbol)
-                info = ticker_obj.info
-                company_name = info.get('shortName') or info.get('longName') or info.get('name')
-            except Exception:
-                company_name = self.symbol
-            # Lưu tên công ty vào DataFrame attrs để tránh lỗi
-            self.data.attrs['company_name'] = company_name
-            
-            # Tính các chỉ số cơ bản
-            self.data['Returns'] = self.data['Close'].pct_change()
-            self.data['Price_Change'] = self.data['Close'].diff()
-            self.data['Volume_Change'] = self.data['Volume'].pct_change()
-            
-            # Tính moving averages
-            self.data['MA_5'] = self.data['Close'].rolling(window=5).mean()
-            self.data['MA_10'] = self.data['Close'].rolling(window=10).mean()
-            self.data['MA_20'] = self.data['Close'].rolling(window=20).mean()
-            
-            # Tính RSI đơn giản
+            ticker_obj = yf.Ticker(self.symbol)
+            info = ticker_obj.info
+            company_name = info.get('shortName') or info.get('longName') or info.get('name')
+            self.data.attrs['company_name'] = company_name  # Lưu tên công ty vào thuộc tính của DataFrame
+
+            # Tính các chỉ số kỹ thuật
+            self.data['Returns'] = self.data['Close'].pct_change()  # Tỉ suất sinh lời hàng ngày
+            self.data['Price_Change'] = self.data['Close'].diff()  # Thay đổi giá tuyệt đối
+            self.data['Volume_Change'] = self.data['Volume'].pct_change()  # Thay đổi khối lượng giao dịch
+            self.data['MA_5'] = self.data['Close'].rolling(window=5).mean()  # Trung bình động 5 ngày
+            self.data['MA_10'] = self.data['Close'].rolling(window=10).mean()  # Trung bình động 10 ngày
+            self.data['MA_20'] = self.data['Close'].rolling(window=20).mean()  # Trung bình động 20 ngày
+
+            # Tính RSI
             delta = self.data['Close'].diff()
             gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
             loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
             rs = gain / loss
             self.data['RSI'] = 100 - (100 / (1 + rs))
-            
-            # Tính volatility
+
+            # Tính độ biến động giá
             self.data['Volatility'] = self.data['Returns'].rolling(window=20).std()
-            
-            # Loại bỏ NaN
-            self.data = self.data.dropna()
+
+            self.data = self.data.dropna()  # Loại bỏ các dòng có giá trị NaN
             
             print(f"Đã lấy thành công {len(self.data)} ngày dữ liệu cho {self.symbol} (company: {company_name})")
             return True
@@ -105,72 +97,45 @@ class StockPredictor:
         targets_price = []
         
         # Tạo features từ lookback_days
-        for i in range(self.lookback_days, len(self.data) - 1):
-            # Features: pattern của lookback_days ngày trước
-            feature_row = []
-            
-            # Lấy các giá trị trong lookback_days ngày
-            for j in range(self.lookback_days):
+        for i in range(self.lookback_days, len(self.data) - 1):  # Duyệt qua từng ngày, bắt đầu từ lookback_days
+            feature_row = []  # Vector đặc trưng cho 1 sample
+            for j in range(self.lookback_days):  # Lấy dữ liệu lookback_days ngày trước
                 idx = i - self.lookback_days + j
-                
-                # Kiểm tra bounds
-                if idx < 0 or idx >= len(self.data):
-                    continue
-                
-                # Thêm các features quan trọng với kiểm tra NaN
-                try:
-                    returns = float(self.data['Returns'].iloc[idx]) if pd.notna(self.data['Returns'].iloc[idx]) else 0.0
-                    volume_change = float(self.data['Volume_Change'].iloc[idx]) if pd.notna(self.data['Volume_Change'].iloc[idx]) and not np.isinf(self.data['Volume_Change'].iloc[idx]) else 0.0
-                    close_price = float(self.data['Close'].iloc[idx])
-                    ma5_price = float(self.data['MA_5'].iloc[idx]) if pd.notna(self.data['MA_5'].iloc[idx]) else close_price
-                    ma10_price = float(self.data['MA_10'].iloc[idx]) if pd.notna(self.data['MA_10'].iloc[idx]) else close_price
-                    rsi = float(self.data['RSI'].iloc[idx]) if pd.notna(self.data['RSI'].iloc[idx]) else 50.0
-                    volatility = float(self.data['Volatility'].iloc[idx]) if pd.notna(self.data['Volatility'].iloc[idx]) else 0.0
-                    
-                    # Tính toán MA ratios an toàn
-                    ma5_ratio = (close_price - ma5_price) / ma5_price if ma5_price != 0 else 0.0
-                    ma10_ratio = (close_price - ma10_price) / ma10_price if ma10_price != 0 else 0.0
-                    
-                    # Kiểm tra inf/nan cho ratios
-                    if np.isinf(ma5_ratio) or np.isnan(ma5_ratio):
-                        ma5_ratio = 0.0
-                    if np.isinf(ma10_ratio) or np.isnan(ma10_ratio):
-                        ma10_ratio = 0.0
-                    
-                    feature_row.extend([
-                        returns,
-                        volume_change,
-                        ma5_ratio,
-                        ma10_ratio,
-                        rsi,
-                        volatility
-                    ])
-                except Exception as e:
-                    print(f"Lỗi khi xử lý dữ liệu tại index {idx}: {e}")
-                    # Thêm giá trị mặc định nếu có lỗi
-                    feature_row.extend([0.0, 0.0, 0.0, 0.0, 50.0, 0.0])
-            
-            # Chỉ thêm nếu có đủ features
+                # Lấy các đặc trưng: returns, volume_change, MA ratios, RSI, volatility
+                returns = float(self.data['Returns'].iloc[idx]) if pd.notna(self.data['Returns'].iloc[idx]) else 0.0
+                volume_change = float(self.data['Volume_Change'].iloc[idx]) if pd.notna(self.data['Volume_Change'].iloc[idx]) and not np.isinf(self.data['Volume_Change'].iloc[idx]) else 0.0
+                close_price = float(self.data['Close'].iloc[idx])
+                ma5_price = float(self.data['MA_5'].iloc[idx]) if pd.notna(self.data['MA_5'].iloc[idx]) else close_price
+                ma10_price = float(self.data['MA_10'].iloc[idx]) if pd.notna(self.data['MA_10'].iloc[idx]) else close_price
+                rsi = float(self.data['RSI'].iloc[idx]) if pd.notna(self.data['RSI'].iloc[idx]) else 50.0
+                volatility = float(self.data['Volatility'].iloc[idx]) if pd.notna(self.data['Volatility'].iloc[idx]) else 0.0
+                # Tính tỉ lệ lệch MA
+                ma5_ratio = (close_price - ma5_price) / ma5_price if ma5_price != 0 else 0.0
+                ma10_ratio = (close_price - ma10_price) / ma10_price if ma10_price != 0 else 0.0
+                # Kiểm tra giá trị hợp lệ
+                if np.isinf(ma5_ratio) or np.isnan(ma5_ratio):
+                    ma5_ratio = 0.0
+                if np.isinf(ma10_ratio) or np.isnan(ma10_ratio):
+                    ma10_ratio = 0.0
+                # Thêm vào vector đặc trưng
+                feature_row.extend([returns, volume_change, ma5_ratio, ma10_ratio, rsi, volatility])
+            # Đảm bảo đủ số lượng đặc trưng
             if len(feature_row) == self.lookback_days * 6:
                 features.append(feature_row)
-                
-                # Target: hướng biến động ngày tiếp theo
+                # Lấy nhãn mục tiêu: hướng biến động và giá ngày tiếp theo
                 next_return = self.data['Returns'].iloc[i + 1]
                 next_price = self.data['Close'].iloc[i + 1]
-                
-                # Phân loại hướng biến động
+                # Phân loại hướng biến động: tăng, giảm, giữ
                 if pd.notna(next_return):
-                    if next_return > 0.015:  # Tăng > 1.5%
-                        targets_direction.append(2)  # Mua
-                    elif next_return < -0.015:  # Giảm > 1.5%
-                        targets_direction.append(0)  # Bán
+                    if next_return > 0.015:  # Nếu tăng > 1.5%
+                        targets_direction.append(2)  # Nhãn: tăng mạnh
+                    elif next_return < -0.015:  # Nếu giảm > 1.5%
+                        targets_direction.append(0)  # Nhãn: giảm mạnh
                     else:
-                        targets_direction.append(1)  # Giữ
-                    
-                    targets_price.append(next_price)
+                        targets_direction.append(1)  # Nhãn: ổn định
+                    targets_price.append(next_price)  # Giá mục tiêu
                 else:
-                    # Loại bỏ sample này nếu target là NaN
-                    features.pop()
+                    features.pop()  # Nếu target NaN thì loại bỏ sample
         
         return np.array(features), np.array(targets_direction), np.array(targets_price)
     
