@@ -284,23 +284,23 @@ class StockPredictor:
         # Gợi ý dựa trên hướng dự đoán và độ tin cậy
         if direction == 2 and confidence > 0.35:  # Dự đoán tăng với độ tin cậy vừa phải
             if predicted_return > 0.02:
-                return "NÊN ĐẦU TƯ - Cơ hội tăng giá với mức độ rủi ro cao hơn"
+                return "ĐẦU TƯ - Cơ hội tăng giá với mức độ rủi ro cao hơn"
             else:
-                return "CÂN NHẮC ĐẦU TƯ - Có tín hiệu tăng giá nhẹ, rủi ro cao"
+                return "ĐẦU TƯ - Có tín hiệu tăng giá nhẹ, rủi ro cao"
         elif direction == 0 and confidence > 0.35:  # Dự đoán giảm với độ tin cậy vừa phải
             return "KHÔNG NÊN ĐẦU TƯ - Nguy cơ giảm giá (rủi ro cao)"
         elif direction == 1:
             # Stable: provide more nuanced advice
             if confidence > 0.5:
-                return "GIỮ CỔ PHIẾU - Thị trường dự báo ổn định, nên giữ vị thế hiện tại"
+                return "GIỮ - Thị trường dự báo ổn định, nên giữ vị thế hiện tại"
             elif abs(predicted_return) < 0.01:
-                return "CHỜ THÊM TÍN HIỆU - Biến động dự đoán rất nhỏ, nên quan sát thêm"
+                return "GIỮ - Biến động dự đoán rất nhỏ, nên quan sát thêm"
             else:
-                return "KHÔNG KHUYẾN NGHỊ ĐẦU TƯ - Thị trường có thể dao động trong khoảng hẹp"
+                return "KHÔNG NÊN ĐẦU TƯ - Thị trường có thể dao động trong khoảng hẹp"
         elif confidence < 0.2:
-            return "KHÔNG KHUYẾN NGHỊ ĐẦU TƯ - Độ tin cậy rất thấp, thị trường không rõ ràng"
+            return "KHÔNG NÊN ĐẦU TƯ - Độ tin cậy rất thấp, thị trường không rõ ràng"
         else:
-            return "KHÔNG KHUYẾN NGHỊ ĐẦU TƯ - Thị trường có thể dao động trong khoảng hẹp"
+            return "KHÔNG NÊN ĐẦU TƯ - Thị trường có thể dao động trong khoảng hẹp"
     
     def plot_results(self, prediction):
         """Vẽ biểu đồ kết quả dự đoán"""

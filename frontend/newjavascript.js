@@ -140,12 +140,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (!pinnedContainer) return;
     pinnedContainer.innerHTML = "";
     try {
-      const res = await fetch(`${window.API_BASE_URL || "http://backend:8000"}/get_preferences`);
+      const res = await fetch("http://localhost:8000/get_preferences");
       const data = await res.json();
       if (data && Array.isArray(data.preferences)) {
         for (const symbol of data.preferences) {
           // Gọi API lấy thông tin mã cổ phiếu
-          const infoRes = await fetch(`${window.API_BASE_URL || "http://backend:8000"}/ticker_status`);
+          const infoRes = await fetch(`http://localhost:8000/ticker_status`);
           const infoData = await infoRes.json();
           let stock = infoData.tickers.find((t) => t.symbol === symbol);
           let changeHTML = "";
@@ -193,7 +193,7 @@ document.addEventListener("DOMContentLoaded", async () => {
               });
 
               // Gọi API xóa preference
-              await fetch(`${window.API_BASE_URL || "http://backend:8000"}/remove_preference`, {
+              await fetch("http://localhost:8000/remove_preference", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ symbol }),
@@ -254,7 +254,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         return strong && strong.textContent.trim() === symbol;
       });
       if (existingItem) existingItem.remove();
-      await fetch(`${window.API_BASE_URL || "http://backend:8000"}/remove_preference`, {
+      await fetch("http://localhost:8000/remove_preference", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ symbol }),
@@ -275,7 +275,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         .addEventListener("click", async () => {
           pinnedItem.remove();
           updatePinButtonState(btn, false);
-          await fetch(`${window.API_BASE_URL || "http://backend:8000"}/remove_preference`, {
+          await fetch("http://localhost:8000/remove_preference", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ symbol }),
@@ -286,7 +286,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
       // Cập nhật trạng thái nút sau khi ghim
       updatePinButtonState(btn, true);
-      await fetch(`${window.API_BASE_URL || "http://backend:8000"}/save_preference`, {
+      await fetch("http://localhost:8000/save_preference", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ symbol }),
