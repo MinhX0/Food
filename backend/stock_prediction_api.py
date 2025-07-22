@@ -218,7 +218,6 @@ def get_ticker_data(symbol: str = Query(..., description="Ticker symbol, e.g. AA
 
 # Endpoint: Save user preference (POST)
 from fastapi import Body
-from typing import Dict
 
 class UserPreferenceRequest(BaseModel):
     symbol: str
