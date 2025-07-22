@@ -4,8 +4,6 @@ from typing import Optional
 import uvicorn
 import traceback
 import pandas as pd
-import openai
-import os
 
 # Import the StockPredictor class from the current file
 from stock_prediction_rf import StockPredictor
@@ -218,34 +216,6 @@ def get_ticker_data(symbol: str = Query(..., description="Ticker symbol, e.g. AA
     except Exception as e:
         return {"error": str(e), "trace": traceback.format_exc()}
 
-# Endpoint 2: Get prediction data for a ticker
-# @app.get("/prediction_data")
-# def get_prediction_data(symbol: str = Query(..., description="Ticker symbol, e.g. AAPL"), lookback_days: int = Query(10, description="Lookback days for features")):
-#     try:
-#         predictor = StockPredictor(symbol, lookback_days=lookback_days)
-#         if not predictor.fetch_data():
-#             return {"error": "Could not fetch data for symbol."}
-#         if not predictor.train_model():
-#             return {"error": "Not enough data to train model."}
-#         prediction = predictor.predict_next_day()
-#         if prediction is None:
-#             return {"error": "Prediction failed."}
-#         advice = predictor.get_investment_advice(prediction)
-#         direction_text = predictor.get_direction_text(prediction['direction'])
-#         print("yesysHHHHHHHH")
-#         return {
-#             "symbol": symbol,
-#             "current_price": prediction['current_price'],
-#             "predicted_price": prediction['predicted_price'],
-#             "predicted_return": prediction['predicted_return'],
-#             "direction": direction_text,
-#             "confidence": prediction['confidence'],
-#             "probabilities": list(prediction['probabilities']),
-#             "advice": advice,
-#             "company_name": prediction['company_name']
-#         }
-#     except Exception as e:
-#         return {"error": str(e), "trace": traceback.format_exc()}
 
 # Endpoint: Save user preference (POST)
 from fastapi import Body
@@ -272,33 +242,6 @@ def remove_user_preference(req: UserPreferenceRequest):
 @app.get("/get_preferences")
 def get_user_preferences():
     return {"preferences": list(user_preferences)}
-
-def generate_precise_advice(prediction, risk_appetite):
-    pred_price = prediction.get('predicted_price')
-    curr_price = prediction.get('current_price')
-    pred_return = prediction.get('predicted_return')
-    direction = prediction.get('direction')
-    confidence = prediction.get('confidence')
-    # Example logic:
-    if pred_price is None or curr_price is None:
-        return "Not enough data for advice."
-    if risk_appetite == "high":
-        if direction == 1 and pred_return > 0.01 and confidence > 0.6:
-            return "Aggressive buy: Model predicts strong upward movement."
-        elif direction == 1:
-            return "Buy: Model predicts price increase."
-        elif direction == -1 and pred_return < -0.01:
-            return "Consider selling: Model predicts a drop."
-        else:
-            return "Hold: No strong signal."
-    else:  # low risk appetite
-        if direction == 1 and pred_return > 0.02 and confidence > 0.7:
-            return "Buy (conservative): Model predicts a solid upward trend."
-        elif direction == -1 and pred_return < -0.01:
-            return "Sell: Model predicts a possible drop."
-        else:
-            return "Hold: Wait for a clearer signal."
-
 
 @app.get("/suggest_similar_tickers", tags=["Discovery"], summary="Suggest similar tickers using ChatGPT")
 def suggest_similar_tickers():

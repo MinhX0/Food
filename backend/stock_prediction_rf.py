@@ -308,56 +308,35 @@ class StockPredictor:
             return None
 
     def get_investment_advice(self, prediction):
-        """Đưa ra gợi ý đầu tư với ngưỡng linh hoạt hơn và kiểm tra tính hợp lệ của dự đoán"""
+        """Đưa ra gợi ý đầu tư"""
         if prediction is None:
-            return "KHÔNG KHUYẾN NGHỊ - Thiếu dữ liệu dự đoán"
+            return "Không thể đưa ra gợi ý do thiếu dữ liệu dự đoán"
         
         direction = prediction['direction']
+        confidence = prediction['confidence']
         predicted_return = prediction['predicted_return']
-        probabilities = prediction['probabilities']
-        current_price = prediction['current_price']
-        predicted_price = prediction['predicted_price']
-        
-        # Kiểm tra tính hợp lệ của dự đoán giá với ngưỡng nới lỏng hơn
-        if not (0.4 <= predicted_price/current_price <= 2.5):  # Giới hạn biến động -60% đến +150%
-            return "KHÔNG KHUYẾN NGHỊ - Dự đoán giá không hợp lệ"
-        
-        # Giới hạn predicted_return trong khoảng hợp lý
-        predicted_return = max(min(predicted_return, 1.5), -0.6)  # Giới hạn -60% đến +150%
-        
-        # Tính toán các chỉ số để đánh giá
-        up_trend = probabilities[2]  # Xác suất tăng
-        down_trend = probabilities[0]  # Xác suất giảm
-        stable_trend = probabilities[1]  # Xác suất ổn định
-        
-        # Phân tích xu hướng với các ngưỡng mới
-        if direction == 2:  # Xu hướng tăng
-            if up_trend >= 0.25:  # Giảm ngưỡng xuống 25%
-                trend_text = "mạnh" if up_trend >= 0.35 else "nhẹ"
-                confidence_text = "cao" if up_trend >= 0.4 else "trung bình"
-                
-                # Thêm điều kiện kết hợp với stable_trend
-                if up_trend + stable_trend >= 0.6:  # Tổng xác suất tăng và ổn định > 60%
-                    return "NÊN ĐẦU TƯ - Dự báo tăng {} {:.1%} (Độ tin cậy {}: {:.1%})".format(
-                        trend_text, predicted_return * 100, confidence_text, up_trend
-                    )
-        
-        elif direction == 0:  # Xu hướng giảm
-            if down_trend >= 0.25:  # Giảm ngưỡng xuống 25%
-                trend_text = "mạnh" if down_trend >= 0.35 else "nhẹ"
-                confidence_text = "cao" if down_trend >= 0.4 else "trung bình"
-                
-                # Thêm điều kiện kết hợp với stable_trend
-                if down_trend + stable_trend >= 0.6:  # Tổng xác suất giảm và ổn định > 60%
-                    return "KHÔNG NÊN ĐẦU TƯ - Dự báo giảm {} {:.1%} (Độ tin cậy {}: {:.1%})".format(
-                        trend_text, abs(predicted_return * 100), confidence_text, down_trend
-                    )
-        
-        # Các trường hợp không có xu hướng rõ ràng
-        if stable_trend >= 0.4:  # Xu hướng ổn định
-            return "KHÔNG KHUYẾN NGHỊ - Thị trường ổn định"
+        print(f"DEBUG: direction={direction}, confidence={confidence}, predicted_return={predicted_return}")
+
+        # Gợi ý dựa trên hướng dự đoán và độ tin cậy
+        if direction == 2 and confidence > 0.35:  # Dự đoán tăng với độ tin cậy vừa phải
+            if predicted_return > 0.02:
+                return "NÊN ĐẦU TƯ - Cơ hội tăng giá với mức độ rủi ro cao hơn"
+            else:
+                return "CÂN NHẮC ĐẦU TƯ - Có tín hiệu tăng giá nhẹ, rủi ro cao"
+        elif direction == 0 and confidence > 0.35:  # Dự đoán giảm với độ tin cậy vừa phải
+            return "KHÔNG NÊN ĐẦU TƯ - Nguy cơ giảm giá (rủi ro cao)"
+        elif direction == 1:
+            # Stable: provide more nuanced advice
+            if confidence > 0.5:
+                return "GIỮ CỔ PHIẾU - Thị trường dự báo ổn định, nên giữ vị thế hiện tại"
+            elif abs(predicted_return) < 0.01:
+                return "CHỜ THÊM TÍN HIỆU - Biến động dự đoán rất nhỏ, nên quan sát thêm"
+            else:
+                return "KHÔNG KHUYẾN NGHỊ ĐẦU TƯ - Thị trường có thể dao động trong khoảng hẹp"
+        elif confidence < 0.2:
+            return "KHÔNG KHUYẾN NGHỊ ĐẦU TƯ - Độ tin cậy rất thấp, thị trường không rõ ràng"
         else:
-            return "KHÔNG KHUYẾN NGHỊ - Thị trường chưa có xu hướng rõ ràng"
+            return "KHÔNG KHUYẾN NGHỊ ĐẦU TƯ - Thị trường có thể dao động trong khoảng hẹp"
     
     def plot_results(self, prediction):
         """Vẽ biểu đồ kết quả dự đoán"""
