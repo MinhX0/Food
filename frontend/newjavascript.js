@@ -15,7 +15,12 @@ async function updatePriceTicker() {
     let tickerContent = '';
     response.tickers.forEach(ticker => {
       if (ticker.price !== null && ticker.change_percent !== null) {
-        const formattedPrice = parseFloat(ticker.price).toLocaleString();
+        const price = parseFloat(ticker.price);
+        const formattedPrice = price.toLocaleString('en-US', {
+          style: 'currency',
+          currency: ticker.symbol.toLowerCase().endsWith('.vn') ? 'VND' : 'USD',
+          maximumFractionDigits: ticker.symbol.toLowerCase().endsWith('.vn') ? 0 : 2
+        });
         const changeSign = ticker.change_percent >= 0 ? '▲' : '▼';
         const direction = ticker.change_percent >= 0 ? 'UP' : 'DOWN';
         const tickerClass = ticker.change_percent >= 0 ? 'up' : 'down';
@@ -166,8 +171,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       }</td>
       <td class="px-4 py-2 text-center align-middle" style="width:120px">${
         obj && obj.price != null
-          ? obj.price.toLocaleString() +
-            (obj.symbol.toLowerCase().endsWith(".vn") ? " vnđ" : " dollar")
+          ? obj.price.toLocaleString('en-US', {
+              style: 'currency',
+              currency: obj.symbol.toLowerCase().endsWith(".vn") ? 'VND' : 'USD',
+              maximumFractionDigits: obj.symbol.toLowerCase().endsWith(".vn") ? 0 : 2
+            })
           : "N/A"
       }</td>
       <td class="px-4 py-2 ${changeColor} text-center align-middle" style="width:120px">${changeDisplay}</td>
@@ -226,10 +234,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
           }
           const pinnedItem = document.createElement("div");
-          pinnedItem.className = "pinned-stock flex items-center gap-2";
+          pinnedItem.className = "pinned-stock bg-gray-700 px-3 py-2 rounded-lg flex items-center gap-2 text-sm";
           pinnedItem.innerHTML = `
-            <span><strong>${symbol}</strong> <span>${changeHTML}</span></span>
-            <i class="fas fa-times text-gray-400 hover:text-red-600 cursor-pointer unpin-btn"></i>
+            <span class="flex items-center"><strong class="text-green-400">${symbol}</strong> <span class="ml-2 text-gray-300">${changeHTML}</span></span>
+            <i class="fas fa-times text-gray-400 hover:text-red-600 cursor-pointer unpin-btn ml-2"></i>
           `;
           pinnedContainer.appendChild(pinnedItem);
           pinnedItem
@@ -318,10 +326,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     } else {
       // Ghim
       const pinnedItem = document.createElement("div");
-      pinnedItem.className = "pinned-stock flex items-center gap-2";
+      pinnedItem.className = "pinned-stock bg-gray-700 px-3 py-2 rounded-lg flex items-center gap-2 text-sm";
       pinnedItem.innerHTML = `
-        <span><strong>${symbol}</strong> <span>${changeHTML}</span></span>
-        <i class="fas fa-times text-gray-400 hover:text-red-600 cursor-pointer unpin-btn"></i>
+        <span class="flex items-center"><strong class="text-green-400">${symbol}</strong> <span class="ml-2 text-gray-300">${changeHTML}</span></span>
+        <i class="fas fa-times text-gray-400 hover:text-red-600 cursor-pointer unpin-btn ml-2"></i>
       `;
       pinnedContainer.appendChild(pinnedItem);
       pinnedItem
@@ -446,8 +454,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       }</td>
       <td class="px-4 py-2 text-center align-middle" style="width:120px">${
         stock && stock.price != null
-          ? stock.price.toLocaleString() +
-            (stock.symbol.toLowerCase().endsWith(".vn") ? " vnđ" : "")
+          ? stock.price.toLocaleString('en-US', {
+              style: 'currency',
+              currency: stock.symbol.toLowerCase().endsWith(".vn") ? 'VND' : 'USD',
+              maximumFractionDigits: stock.symbol.toLowerCase().endsWith(".vn") ? 0 : 2
+            })
           : "N/A"
       }</td>
       <td class="px-4 py-2 ${changeColor} text-center align-middle" style="width:120px">${changeDisplay}</td>
@@ -465,24 +476,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     const tbody = document.getElementById("stockTableBody");
     if (!tbody) return;
     try {
-      // Lấy các mã tương tự
-      const similarTickers = await getRequest("/suggest_similar_tickers");
-      console.log(similarTickers);
-
-      if (similarTickers && similarTickers.liked_tickers) {
-        console.log("Các mã tương tự:", similarTickers.liked_tickers);
+      // Get pinned tickers from preferences
+      const preferences = await getRequest("/get_preferences");
+      if (preferences && preferences.preferences) {
+        // Get detailed info for pinned tickers
+        const batchInfo = await getBatchTickerInfo(preferences.preferences);
+        if (batchInfo && batchInfo.data) {
+          console.log("Pinned tickers info:", batchInfo.data);
+          renderStocks(batchInfo.data, "stockTableBody");
+        }
+        return batchInfo?.data || [];
       }
-      // Lấy thông tin chi tiết cho các mã yêu thích
-      const batchInfo = await getBatchTickerInfo(similarTickers.liked_tickers);
-      if (batchInfo && batchInfo.data) {
-        console.log("Thông tin chi tiết mã yêu thích:", batchInfo.data);
-        // Render dữ liệu nếu cần
-        renderStocks(batchInfo.data, "stockTableBody");
-      }
-
-      return batchInfo?.data || [];
+      return [];
     } catch (error) {
-      console.error("Lỗi trong getPinned_Tickers:", error);
+      console.error("Error in getPinned_Tickers:", error);
       return [];
     }
   }

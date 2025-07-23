@@ -9,18 +9,8 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <link rel="stylesheet" href="newcss.css" />
+  <link rel="stylesheet" href="styles.css" />
   <style>
-    body {
-      background-color: #10131a;
-      background-image:
-        radial-gradient(circle at 100% 100%, #23272f 0, #23272f 3px, transparent 3px),
-        radial-gradient(circle at 0 0, #23272f 0, #23272f 3px, transparent 3px),
-        repeating-linear-gradient(0deg, #181a20 0, #181a20 1px, transparent 1px, transparent 20px),
-        repeating-linear-gradient(90deg, #181a20 0, #181a20 1px, #10131a 1px, #10131a 20px);
-      background-size: 20px 20px;
-      position: relative;
-    }
 
     body::before {
       content: '';
@@ -86,25 +76,8 @@
 </head>
 
 <body class="bg-[#10131a] text-gray-100">
-  <!-- Navigation -->
-  <nav class="bg-gray-950 text-gray-100 p-4 shadow-md border-b border-gray-800">
-    <div class="container mx-auto flex justify-between items-center">
-      <div class="flex items-center space-x-2">
-        <a href="index.html">
-          <img
-            src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/e8aad51a-599e-4a12-b08e-c55418a5118b.png"
-            alt="CIIS Logo" class="h-10" />
-        </a>
-        <h1 class="text-xl font-bold text-green-400">CIIS</h1>
-      </div>
-
-      <div class="space-x-6 hidden md:flex">
-        <a href="index.html" class="hover:text-green-400">Dashboard</a>
-        <a href="requeststocks.html" id="investSuggestBtn" class="hover:text-green-400">Gợi ý đầu tư</a>
-        <a href="#footer" id="aboutUsBtn" class="hover:text-green-400">About us</a>
-      </div>
-    </div>
-  </nav>
+  <!-- Header -->
+  <div id="header-placeholder"></div>
   <!-- Stock Price Ticker -->
   <div class="bg-gray-900 border-y border-gray-800">
     <div class="ticker-wrap bg-gray-900 py-2">
@@ -326,42 +299,19 @@
       </div>
     </div>
     <!-- Footer -->
-    <footer class="bg-gray-950 text-gray-300 py-8 px-4 border-t border-gray-800">
-      <div class="container mx-auto">
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div>
-            <h3 class="text-xl font-bold mb-4 text-green-400">CIIS</h3>
-            <p class="text-gray-400">Hệ thống phân tích thị trường</p>
-          </div>
-          <div>
-            <h3 class="text-xl font-bold mb-4 text-green-400">Liên hệ</h3>
-            <ul class="text-gray-400 space-y-2">
-              <li><i class="fas fa-envelope mr-2"></i> contact@ciis.vn</li>
-              <li><i class="fas fa-phone mr-2"></i> 0123 456 789</li>
-            </ul>
-          </div>
-          <div>
-            <h3 class="text-xl font-bold mb-4 text-green-400">Thông tin</h3>
-            <ul class="text-gray-400 space-y-2">
-              <li><a href="#" class="hover:text-green-400">Điều khoản</a></li>
-              <li><a href="#" class="hover:text-green-400">Bảo mật</a></li>
-            </ul>
-          </div>
-        </div>
-        <div class="border-t border-gray-800 mt-8 pt-6 text-center text-gray-500">
-          <p>© 2025 CIIS. All rights reserved.</p>
-        </div>
-      </div>
-    </footer>
+    <div id="footer-placeholder"></div>
+    
     <!-- Loading Spinner -->
-    <div id="loadingSpinner"
-      style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:rgba(20,20,20,0.85);"
-      class="flex items-center justify-center">
-      <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-green-500 border-b-4 border-gray-700"></div>
-    </div>
+    <div id="spinner-placeholder"></div>
     <script src="api.js"></script>
+    <script src="components.js"></script>
     <script src="newjavascript.js"></script>
     <script>
+      // Initialize shared components
+      document.addEventListener('DOMContentLoaded', function() {
+        initComponents();
+      });
+      
       // Show/hide search results table based on search input
       document.getElementById('stockSearch').addEventListener('input', function() {
         const searchResultsTable = document.getElementById('searchResultsTable');

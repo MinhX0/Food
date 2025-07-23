@@ -1,0 +1,85 @@
+body {
+  background-color: #10131a;
+  background-image:
+    radial-gradient(circle at 100% 100%, #23272f 0, #23272f 3px, transparent 3px),
+    radial-gradient(circle at 0 0, #23272f 0, #23272f 3px, transparent 3px),
+    repeating-linear-gradient(0deg, #181a20 0, #181a20 1px, transparent 1px, transparent 20px),
+    repeating-linear-gradient(90deg, #181a20 0, #181a20 1px, #10131a 1px, #10131a 20px);
+  background-size: 20px 20px;
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background:
+    linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%),
+    linear-gradient(45deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.animated-text {
+  background: linear-gradient(90deg, #16a34a, #22d3ee, #16a34a);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: animated-gradient-fade 5s ease-in-out infinite;
+  background-size: 200% auto;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes animated-gradient-fade {
+  0% {
+    background-position: 0% center;
+    filter: brightness(1);
+  }
+  40% {
+    background-position: 100% center;
+    filter: brightness(1.2);
+  }
+  60% {
+    background-position: 100% center;
+    filter: brightness(1.2);
+  }
+  100% {
+    background-position: 0% center;
+    filter: brightness(1);
+  }
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 4px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(17, 24, 39, 0.95);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #4ade80;
+  border-radius: 2px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
+}
+
+.bg-white {
+  background-color: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.navbar-ombre {
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.1),
+    0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}

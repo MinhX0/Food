@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>CIIS - About Us</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="styles.css" />
+    <style>
+      body::before {
+        content: '';
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background:
+          linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%),
+          linear-gradient(45deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%);
+        pointer-events: none;
+        z-index: 0;
+      }
+
+      .animated-text {
+        background: linear-gradient(90deg, #16a34a, #22d3ee, #16a34a);
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+        animation: animated-gradient-fade 5s ease-in-out infinite;
+        background-size: 200% auto;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      @keyframes animated-gradient-fade {
+        0% { background-position: 0% center; filter: brightness(1); }
+        40% { background-position: 100% center; filter: brightness(1.2); }
+        60% { background-position: 100% center; filter: brightness(1.2); }
+        100% { background-position: 0% center; filter: brightness(1); }
+      }
+    </style>
+  </head>
+
+  <body class="bg-[#10131a] text-gray-100">
+    <!-- Header -->
+    <div id="header-placeholder"></div>
+
+    <!-- Main Content -->
+    <div class="container mx-auto px-4 py-12">
+      <!-- About Us Header -->
+      <div class="text-center mb-16">
+        <h1 class="text-4xl font-bold mb-4 animated-text">About CIIS</h1>
+        <p class="text-xl text-gray-400">Consumer Investment Insight System</p>
+      </div>
+
+      <!-- Main Content Grid -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-12 max-w-6xl mx-auto">
+        <!-- Our Mission -->
+        <div class="bg-gray-800/50 p-8 rounded-xl shadow-lg backdrop-blur-sm">
+          <h2 class="text-2xl font-bold text-green-400 mb-4 flex items-center">
+            <i class="fas fa-bullseye mr-3"></i>
+            Sứ mệnh của chúng tôi
+          </h2>
+          <p class="text-gray-300 leading-relaxed">
+            CIIS ra đời với sứ mệnh mang đến cho nhà đầu tư những công cụ phân tích thông minh,
+            kết hợp giữa công nghệ AI và kiến thức thị trường chuyên sâu. Chúng tôi tin rằng
+            việc đầu tư thông minh bắt đầu từ việc hiểu rõ hành vi người tiêu dùng và xu hướng thị trường.
+          </p>
+        </div>
+
+        <!-- Our Vision -->
+        <div class="bg-gray-800/50 p-8 rounded-xl shadow-lg backdrop-blur-sm">
+          <h2 class="text-2xl font-bold text-green-400 mb-4 flex items-center">
+            <i class="fas fa-eye mr-3"></i>
+            Tầm nhìn
+          </h2>
+          <p class="text-gray-300 leading-relaxed">
+            Chúng tôi hướng tới việc trở thành nền tảng phân tích đầu tư hàng đầu tại Việt Nam,
+            nơi công nghệ AI và big data được ứng dụng để đem lại những insight có giá trị cho
+            cộng đồng nhà đầu tư.
+          </p>
+        </div>
+
+        <!-- Our Technology -->
+        <div class="bg-gray-800/50 p-8 rounded-xl shadow-lg backdrop-blur-sm">
+          <h2 class="text-2xl font-bold text-green-400 mb-4 flex items-center">
+            <i class="fas fa-microchip mr-3"></i>
+            Công nghệ
+          </h2>
+          <p class="text-gray-300 leading-relaxed">
+            CIIS sử dụng các công nghệ AI tiên tiến và phân tích dữ liệu lớn để:
+          </p>
+          <ul class="list-disc list-inside mt-4 space-y-2 text-gray-300">
+            <li>Phân tích hành vi người tiêu dùng</li>
+            <li>Dự đoán xu hướng thị trường</li>
+            <li>Đề xuất cơ hội đầu tư tiềm năng</li>
+            <li>Theo dõi và phân tích thông tin thị trường realtime</li>
+          </ul>
+        </div>
+
+        <!-- Our Team -->
+        <div class="bg-gray-800/50 p-8 rounded-xl shadow-lg backdrop-blur-sm">
+          <h2 class="text-2xl font-bold text-green-400 mb-4 flex items-center">
+            <i class="fas fa-users mr-3"></i>
+            Đội ngũ
+          </h2>
+          <p class="text-gray-300 leading-relaxed">
+            Đội ngũ CIIS bao gồm các chuyên gia trong lĩnh vực:
+          </p>
+          <ul class="list-disc list-inside mt-4 space-y-2 text-gray-300">
+            <li>Phân tích dữ liệu và AI</li>
+            <li>Phân tích tài chính và đầu tư</li>
+            <li>Nghiên cứu thị trường</li>
+            <li>Phát triển phần mềm</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Contact Section -->
+      <div class="mt-16 text-center max-w-4xl mx-auto bg-gray-800/50 p-8 rounded-xl shadow-lg backdrop-blur-sm">
+        <h2 class="text-2xl font-bold text-green-400 mb-6">Liên hệ với chúng tôi</h2>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="flex flex-col items-center">
+            <i class="fas fa-envelope text-3xl text-green-400 mb-4"></i>
+            <h3 class="text-lg font-semibold mb-2">Email</h3>
+            <p class="text-gray-300">contact@ciis.vn</p>
+          </div>
+          <div class="flex flex-col items-center">
+            <i class="fas fa-phone text-3xl text-green-400 mb-4"></i>
+            <h3 class="text-lg font-semibold mb-2">Điện thoại</h3>
+            <p class="text-gray-300">0123 456 789</p>
+          </div>
+          <div class="flex flex-col items-center">
+            <i class="fas fa-location-dot text-3xl text-green-400 mb-4"></i>
+            <h3 class="text-lg font-semibold mb-2">Địa chỉ</h3>
+            <p class="text-gray-300">Hà Nội, Việt Nam</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer-placeholder"></div>
+    
+    <!-- Loading Spinner -->
+    <div id="spinner-placeholder"></div>
+
+    <script src="components.js"></script>
+    <script>
+      // Initialize shared components
+      document.addEventListener('DOMContentLoaded', function() {
+        initComponents();
+      });
+    </script>
+  </body>
+</html>
