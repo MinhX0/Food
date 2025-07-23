@@ -12,12 +12,12 @@
   <link rel="stylesheet" href="newcss.css" />
   <style>
     body {
-      background-color: #f3f4f6;
+      background-color: #10131a;
       background-image:
-        radial-gradient(circle at 100% 100%, #ffffff 0, #ffffff 3px, transparent 3px),
-        radial-gradient(circle at 0 0, #ffffff 0, #ffffff 3px, transparent 3px),
-        repeating-linear-gradient(0deg, #e5e7eb 0, #e5e7eb 1px, transparent 1px, transparent 20px),
-        repeating-linear-gradient(90deg, #e5e7eb 0, #e5e7eb 1px, #f3f4f6 1px, #f3f4f6 20px);
+        radial-gradient(circle at 100% 100%, #23272f 0, #23272f 3px, transparent 3px),
+        radial-gradient(circle at 0 0, #23272f 0, #23272f 3px, transparent 3px),
+        repeating-linear-gradient(0deg, #181a20 0, #181a20 1px, transparent 1px, transparent 20px),
+        repeating-linear-gradient(90deg, #181a20 0, #181a20 1px, #10131a 1px, #10131a 20px);
       background-size: 20px 20px;
       position: relative;
     }
@@ -37,26 +37,31 @@
     }
 
     .animated-text {
-      background: linear-gradient(90deg, #0072ff, #00c6ff);
+      background: linear-gradient(90deg, #16a34a, #22d3ee, #16a34a);
       -webkit-background-clip: text;
       background-clip: text;
       color: transparent;
-      animation: gradient 3s ease infinite;
+      animation: animated-gradient-fade 5s ease-in-out infinite;
       background-size: 200% auto;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    @keyframes gradient {
+    @keyframes animated-gradient-fade {
       0% {
         background-position: 0% center;
+        filter: brightness(1);
       }
-
-      50% {
+      40% {
         background-position: 100% center;
+        filter: brightness(1.2);
       }
-
+      60% {
+        background-position: 100% center;
+        filter: brightness(1.2);
+      }
       100% {
         background-position: 0% center;
+        filter: brightness(1);
       }
     }
 
@@ -77,9 +82,9 @@
   </style>
 </head>
 
-<body class="bg-gray-100">
+  <body class="bg-[#10131a] text-gray-100">
   <!-- Navigation -->
-  <nav class="navbar-ombre text-white p-4 shadow-md">
+  <nav class="bg-gray-950 text-gray-100 p-4 shadow-md border-b border-gray-800">
     <div class="container mx-auto flex justify-between items-center">
       <div class="flex items-center space-x-2">
         <a href="index.html">
@@ -87,13 +92,13 @@
             src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/e8aad51a-599e-4a12-b08e-c55418a5118b.png"
             alt="CIIS Logo" class="h-10" />
         </a>
-        <h1 class="text-xl font-bold">CIIS</h1>
+        <h1 class="text-xl font-bold text-green-400">CIIS</h1>
       </div>
 
       <div class="space-x-6 hidden md:flex">
-        <a href="index.html" class="hover:text-blue-300">Dashboard</a>
-        <a href="requeststocks.html" id="investSuggestBtn" class="hover:text-blue-300">Gợi ý đầu tư</a>
-        <a href="#footer" id="aboutUsBtn" class="hover:text-blue-300">About us</a>
+        <a href="index.html" class="hover:text-green-400">Dashboard</a>
+        <a href="requeststocks.html" id="investSuggestBtn" class="hover:text-green-400">Gợi ý đầu tư</a>
+        <a href="#footer" id="aboutUsBtn" class="hover:text-green-400">About us</a>
       </div>
     </div>
   </nav>
@@ -106,20 +111,18 @@
 
     <!-- Header -->
     <div class="text-center my-8">
-
-      <h2 class="text-4xl font-bold mb-2 animated-text">CONSUMER IVESTMENT INSIGHT SYSTEM</h2>
-      <p class="text-gray-600">Hệ thống phân tích hành vi người tiêu dùng và dự đoán cơ hội đầu tư trên thị trường chứng
-        khoán bằng AI</p>
+      <h2 class="text-4xl font-bold mb-2 animated-text">CONSUMER INVESTMENT INSIGHT SYSTEM</h2>
+      <p class="text-gray-400">Hệ thống phân tích hành vi người tiêu dùng và dự đoán cơ hội đầu tư trên thị trường chứng khoán bằng AI</p>
     </div>
 
     <!-- Stock Management -->
-    <div class="bg-white p-6 rounded-lg shadow-md mb-6">
+    <div class="bg-gray-800 p-6 rounded-lg shadow-md mb-6">
       <div class="flex flex-col md:flex-row justify-between items-center gap-4 mb-4">
-        <h3 class="text-xl font-semibold">Quản lý mã cổ phiếu</h3>
+        <h3 class="text-xl font-semibold text-green-400">Quản lý mã cổ phiếu</h3>
         <div class="relative w-full md:w-96">
-          <input id="stockSearch" type="text" placeholder="Tìm kiếm mã cổ phiếu..."
-            class="w-full pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-          <div class="absolute left-3 top-2.5 text-gray-400">
+        <input id="stockSearch" type="text" placeholder="Tìm kiếm mã cổ phiếu..."
+            class="w-full pl-10 pr-4 py-2 border border-gray-700 bg-gray-900 text-gray-100 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400" />
+          <div class="absolute left-3 top-2.5 text-green-400">
             <i class="fas fa-search"></i>
           </div>
           <div id="searchResults"
@@ -127,17 +130,16 @@
           </div>
         </div>
         <a href="allstocks.html" id="viewAllBtn"
-          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
+          class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 flex items-center">
           <i class="fas fa-chart-line mr-2"></i>Xem tất cả
         </a>
       </div>
 
       <div class="mb-4">
-        <h4 class="text-lg font-medium text-red-600 flex items-center">
+        <h4 class="text-lg font-medium text-yellow-400 flex items-center">
           <i class="fas fa-thumbtack mr-2"></i> Cổ phiếu đã ghim
         </h4>
         <div id="pinnedStocks" class="flex flex-wrap gap-2 mt-2">
-
         </div>
       </div>
 
@@ -156,10 +158,10 @@
       </div>
     </div> -->
 
-      <div class="bg-white p-6 rounded-lg shadow-md mt-8">
-        <h3 class="text-xl font-bold mb-4">Kết quả tìm kiếm</h3>
-        <table class="min-w-full table-auto text-sm">
-          <thead class="bg-gray-50">
+      <div class="bg-gray-800 p-6 rounded-lg shadow-md mt-8">
+        <h3 class="text-xl font-bold mb-4 text-green-400">Kết quả tìm kiếm</h3>
+        <table class="min-w-full table-auto text-sm text-gray-100">
+          <thead class="bg-gray-900">
             <tr>
               <th class="px-4 py-2"></th>
               <th class="px-4 py-2 font-bold">Mã</th>
@@ -174,10 +176,10 @@
         </table>
       </div>
 
-      <div class="bg-white p-6 rounded-lg shadow-md mt-8">
-        <h3 class="text-xl font-bold mb-4">Mã cổ phiếu đã ghim</h3>
-        <table class="min-w-full table-auto text-sm">
-          <thead class="bg-gray-50">
+      <div class="bg-gray-800 p-6 rounded-lg shadow-md mt-8">
+        <h3 class="text-xl font-bold mb-4 text-green-400">Mã cổ phiếu đã ghim</h3>
+        <table class="min-w-full table-auto text-sm text-gray-100">
+          <thead class="bg-gray-900">
             <tr>
               <th class="px-4 py-2"></th>
               <th class="px-4 py-2 font-bold">Mã</th>
@@ -195,38 +197,38 @@
   </div>
   </div>
   <!-- Footer -->
-  <footer class="bg-gray-900 text-white py-8 px-4">
+  <footer class="bg-gray-950 text-gray-300 py-8 px-4 border-t border-gray-800">
     <div class="container mx-auto">
       <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <div>
-          <h3 class="text-xl font-bold mb-4">CIIS</h3>
-          <p class="text-gray-400">Hệ thống phân tích thị trường</p>
+        <h3 class="text-xl font-bold mb-4 text-green-400">CIIS</h3>
+        <p class="text-gray-400">Hệ thống phân tích thị trường</p>
         </div>
         <div>
-          <h3 class="text-xl font-bold mb-4">Liên hệ</h3>
-          <ul class="text-gray-400 space-y-2">
-            <li><i class="fas fa-envelope mr-2"></i> contact@ciis.vn</li>
-            <li><i class="fas fa-phone mr-2"></i> 0123 456 789</li>
-          </ul>
+        <h3 class="text-xl font-bold mb-4 text-green-400">Liên hệ</h3>
+        <ul class="text-gray-400 space-y-2">
+          <li><i class="fas fa-envelope mr-2"></i> contact@ciis.vn</li>
+          <li><i class="fas fa-phone mr-2"></i> 0123 456 789</li>
+        </ul>
         </div>
         <div>
-          <h3 class="text-xl font-bold mb-4">Thông tin</h3>
-          <ul class="text-gray-400 space-y-2">
-            <li><a href="#" class="hover:text-white">Điều khoản</a></li>
-            <li><a href="#" class="hover:text-white">Bảo mật</a></li>
-          </ul>
+        <h3 class="text-xl font-bold mb-4 text-green-400">Thông tin</h3>
+        <ul class="text-gray-400 space-y-2">
+          <li><a href="#" class="hover:text-green-400">Điều khoản</a></li>
+          <li><a href="#" class="hover:text-green-400">Bảo mật</a></li>
+        </ul>
         </div>
       </div>
-      <div class="border-t border-gray-700 mt-8 pt-6 text-center text-gray-400">
+      <div class="border-t border-gray-800 mt-8 pt-6 text-center text-gray-500">
         <p>© 2025 CIIS. All rights reserved.</p>
       </div>
     </div>
   </footer>
   <!-- Loading Spinner -->
   <div id="loadingSpinner"
-    style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:rgba(255,255,255,0.7);"
+    style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:rgba(20,20,20,0.85);"
     class="flex items-center justify-center">
-    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-b-4 border-gray-300"></div>
+    <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-green-500 border-b-4 border-gray-700"></div>
   </div>
   <script src="api.js"></script>
   <script src="newjavascript.js"></script>
