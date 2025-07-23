@@ -11,8 +11,12 @@ from chatgpt_ticker_suggest import get_similar_tickers_from_gemini
 
 
 
+import time
 # Global cache for ticker data
 ticker_data_cache = {}
+# Global cache for prediction results: (symbol, lookback_days) -> (result, timestamp)
+prediction_cache = {}
+PREDICTION_CACHE_TTL = 300  # seconds (5 minutes)
 DEFAULT_TICKERS = ["VCB.VN", "VIC.VN", "VHM.VN", "HPG.VN", "FPT.VN", "BID.VN", "GAS.VN", "VNM.VN", "TCB.VN", "CTG.VN", "VPB.VN", "MBB.VN", "ACB.VN", "MSN.VN", "MWG.VN", "GVR.VN", "STB.VN", "HDB.VN", "SSI.VN", "VRE.VN", "SAB.VN", "PLX.VN", "VJC.VN", "TPB.VN", "POW.VN", "DGC.VN", "PNJ.VN", "BVH.VN", "REE.VN", "KDH.VN", "EIB.VN", "OCB.VN", "MSB.VN", "LPB.VN", "SHB.VN", "VIB.VN", "PDR.VN", "DXG.VN", "HSG.VN", "PC1.VN", ]
 # DEFAULT_TICKERS = ["VCB.VN", "VIC.VN", "VHM.VN", ]
 # CSV file paths
@@ -107,6 +111,14 @@ class PredictionRequest(BaseModel):
 @app.get("/prediction_data")
 def get_prediction_data(symbol: str = Query(..., description="Ticker symbol, e.g. AAPL"), lookback_days: int = Query(130, description="Lookback days for features")):
     try:
+        cache_key = (symbol, lookback_days)
+        now = time.time()
+        # Check cache
+        if cache_key in prediction_cache:
+            cached_result, cached_time = prediction_cache[cache_key]
+            if now - cached_time < PREDICTION_CACHE_TTL:
+                return cached_result
+        # Not cached or expired, compute prediction
         predictor = StockPredictor(symbol, lookback_days=lookback_days)
         if not predictor.fetch_data():
             return {"error": "Could not fetch data for symbol."}
@@ -115,13 +127,13 @@ def get_prediction_data(symbol: str = Query(..., description="Ticker symbol, e.g
         prediction = predictor.predict_next_day()
         if prediction is None:
             return {"error": "Prediction failed."}
-        # Lấy tên công ty từ predictor.data.attrs nếu có
-        # company_name = symbol
         if hasattr(predictor, 'data') and hasattr(predictor.data, 'attrs') and 'company_name' in predictor.data.attrs:
             company_name = predictor.data.attrs['company_name']
+        else:
+            company_name = symbol
         advice = predictor.get_investment_advice(prediction)
         direction_text = predictor.get_direction_text(prediction['direction'])
-        return {
+        result = {
             "symbol": symbol,
             "company_name": company_name,
             "current_price": prediction['current_price'],
@@ -132,6 +144,8 @@ def get_prediction_data(symbol: str = Query(..., description="Ticker symbol, e.g
             "probabilities": list(prediction['probabilities']),
             "advice": advice
         }
+        prediction_cache[cache_key] = (result, now)
+        return result
     except Exception as e:
         return {"error": str(e), "trace": traceback.format_exc()}
 
@@ -158,7 +172,8 @@ def load_user_preferences_from_csv():
 
 
 
-# Prefetch ticker data at startup
+
+# Prefetch ticker data and prediction cache at startup
 @app.on_event("startup")
 def prefetch_ticker_data():
     print("Prefetching ticker data for:", DEFAULT_TICKERS)
@@ -168,6 +183,30 @@ def prefetch_ticker_data():
             if predictor.fetch_data():
                 ticker_data_cache[symbol] = predictor.data.copy()
                 print(f"Prefetched {symbol} ({len(predictor.data)} rows)")
+                # Prefill prediction cache for default lookback_days (130)
+                if predictor.train_model():
+                    prediction = predictor.predict_next_day()
+                    if prediction is not None:
+                        if hasattr(predictor, 'data') and hasattr(predictor.data, 'attrs') and 'company_name' in predictor.data.attrs:
+                            company_name = predictor.data.attrs['company_name']
+                        else:
+                            company_name = symbol
+                        advice = predictor.get_investment_advice(prediction)
+                        direction_text = predictor.get_direction_text(prediction['direction'])
+                        result = {
+                            "symbol": symbol,
+                            "company_name": company_name,
+                            "current_price": prediction['current_price'],
+                            "predicted_price": prediction['predicted_price'],
+                            "predicted_return": prediction['predicted_return'],
+                            "direction": direction_text,
+                            "confidence": prediction['confidence'],
+                            "probabilities": list(prediction['probabilities']),
+                            "advice": advice
+                        }
+                        cache_key = (symbol, 130)
+                        prediction_cache[cache_key] = (result, time.time())
+                        print(f"Prefilled prediction cache for {symbol}")
             else:
                 print(f"Failed to prefetch {symbol}")
         except Exception as e:

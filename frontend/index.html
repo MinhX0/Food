@@ -13,7 +13,7 @@
   <style>
     body {
       background-color: #f3f4f6;
-      background-image: 
+      background-image:
         radial-gradient(circle at 100% 100%, #ffffff 0, #ffffff 3px, transparent 3px),
         radial-gradient(circle at 0 0, #ffffff 0, #ffffff 3px, transparent 3px),
         repeating-linear-gradient(0deg, #e5e7eb 0, #e5e7eb 1px, transparent 1px, transparent 20px),
@@ -21,6 +21,7 @@
       background-size: 20px 20px;
       position: relative;
     }
+
     body::before {
       content: '';
       position: fixed;
@@ -28,12 +29,13 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: 
+      background:
         linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, transparent 100%),
         linear-gradient(45deg, rgba(16, 185, 129, 0.1) 0%, transparent 100%);
       pointer-events: none;
       z-index: 0;
     }
+
     .animated-text {
       background: linear-gradient(90deg, #0072ff, #00c6ff);
       -webkit-background-clip: text;
@@ -43,21 +45,32 @@
       background-size: 200% auto;
       text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
     }
+
     @keyframes gradient {
-      0% { background-position: 0% center; }
-      50% { background-position: 100% center; }
-      100% { background-position: 0% center; }
+      0% {
+        background-position: 0% center;
+      }
+
+      50% {
+        background-position: 100% center;
+      }
+
+      100% {
+        background-position: 0% center;
+      }
     }
+
     .bg-white {
       background-color: rgba(255, 255, 255, 0.95);
       backdrop-filter: blur(10px);
-      box-shadow: 
+      box-shadow:
         0 4px 6px -1px rgba(0, 0, 0, 0.1),
         0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
+
     .navbar-ombre {
       background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
-      box-shadow: 
+      box-shadow:
         0 4px 6px -1px rgba(0, 0, 0, 0.1),
         0 2px 4px -1px rgba(0, 0, 0, 0.06);
     }
@@ -71,11 +84,12 @@
       <div class="flex items-center space-x-2">
         <a href="index.html">
           <img
-          src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/e8aad51a-599e-4a12-b08e-c55418a5118b.png"
-          alt="CIIS Logo" class="h-10" />
+            src="https://storage.googleapis.com/workspace-0f70711f-8b4e-4d94-86f1-2a93ccde5887/image/e8aad51a-599e-4a12-b08e-c55418a5118b.png"
+            alt="CIIS Logo" class="h-10" />
         </a>
         <h1 class="text-xl font-bold">CIIS</h1>
       </div>
+
       <div class="space-x-6 hidden md:flex">
         <a href="index.html" class="hover:text-blue-300">Dashboard</a>
         <a href="requeststocks.html" id="investSuggestBtn" class="hover:text-blue-300">Gợi ý đầu tư</a>
@@ -83,11 +97,16 @@
       </div>
     </div>
   </nav>
+  <script src="https://widget.rss.app/v1/ticker.js" type="text/javascript" async></script>
+  <rssapp-ticker id="t8RFDGffM166lGBd"></rssapp-ticker>
+
 
   <!-- Main Container -->
   <div class="container mx-auto p-4">
+
     <!-- Header -->
     <div class="text-center my-8">
+
       <h2 class="text-4xl font-bold mb-2 animated-text">CONSUMER IVESTMENT INSIGHT SYSTEM</h2>
       <p class="text-gray-600">Hệ thống phân tích hành vi người tiêu dùng và dự đoán cơ hội đầu tư trên thị trường chứng
         khoán bằng AI</p>
@@ -107,7 +126,8 @@
             class="absolute z-10 w-full mt-1 bg-white border rounded-lg shadow-lg hidden max-h-60 overflow-y-auto">
           </div>
         </div>
-        <a href="allstocks.html" id="viewAllBtn" class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
+        <a href="allstocks.html" id="viewAllBtn"
+          class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 flex items-center">
           <i class="fas fa-chart-line mr-2"></i>Xem tất cả
         </a>
       </div>
@@ -136,42 +156,42 @@
       </div>
     </div> -->
 
-     <div class="bg-white p-6 rounded-lg shadow-md mt-8">
-      <h3 class="text-xl font-bold mb-4">Kết quả tìm kiếm</h3>
-      <table class="min-w-full table-auto text-sm">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-4 py-2"></th>
-            <th class="px-4 py-2 font-bold">Mã</th>
-            <th class="px-4 py-2">Công ty</th>
-            <th class="px-4 py-2">Giá</th>
-            <th class="px-4 py-2">Thay đổi</th>
-          </tr>
-        </thead>
-        <tbody id="stockTableBodySearch">
-          <!-- Stock rows will be rendered here by JS -->
-        </tbody>
-      </table>
-    </div>
+      <div class="bg-white p-6 rounded-lg shadow-md mt-8">
+        <h3 class="text-xl font-bold mb-4">Kết quả tìm kiếm</h3>
+        <table class="min-w-full table-auto text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2"></th>
+              <th class="px-4 py-2 font-bold">Mã</th>
+              <th class="px-4 py-2">Công ty</th>
+              <th class="px-4 py-2">Giá</th>
+              <th class="px-4 py-2">Thay đổi</th>
+            </tr>
+          </thead>
+          <tbody id="stockTableBodySearch">
+            <!-- Stock rows will be rendered here by JS -->
+          </tbody>
+        </table>
+      </div>
 
-    <div class="bg-white p-6 rounded-lg shadow-md mt-8">
-      <h3 class="text-xl font-bold mb-4">Mã cổ phiếu đã ghim</h3>
-      <table class="min-w-full table-auto text-sm">
-        <thead class="bg-gray-50">
-          <tr>
-            <th class="px-4 py-2"></th>
-            <th class="px-4 py-2 font-bold">Mã</th>
-            <th class="px-4 py-2">Công ty</th>
-            <th class="px-4 py-2">Giá</th>
-            <th class="px-4 py-2">Thay đổi</th>
-          </tr>
-        </thead>
-        <tbody id="stockTableBody">
-          <!-- Stock rows will be rendered here by JS -->
-        </tbody>
-      </table>
+      <div class="bg-white p-6 rounded-lg shadow-md mt-8">
+        <h3 class="text-xl font-bold mb-4">Mã cổ phiếu đã ghim</h3>
+        <table class="min-w-full table-auto text-sm">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="px-4 py-2"></th>
+              <th class="px-4 py-2 font-bold">Mã</th>
+              <th class="px-4 py-2">Công ty</th>
+              <th class="px-4 py-2">Giá</th>
+              <th class="px-4 py-2">Thay đổi</th>
+            </tr>
+          </thead>
+          <tbody id="stockTableBody">
+            <!-- Stock rows will be rendered here by JS -->
+          </tbody>
+        </table>
+      </div>
     </div>
-  </div>
   </div>
   </div>
   <!-- Footer -->
@@ -202,8 +222,10 @@
       </div>
     </div>
   </footer>
-    <!-- Loading Spinner -->
-  <div id="loadingSpinner" style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:rgba(255,255,255,0.7);" class="flex items-center justify-center">
+  <!-- Loading Spinner -->
+  <div id="loadingSpinner"
+    style="display:none;position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;background:rgba(255,255,255,0.7);"
+    class="flex items-center justify-center">
     <div class="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500 border-b-4 border-gray-300"></div>
   </div>
   <script src="api.js"></script>
