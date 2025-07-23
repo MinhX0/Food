@@ -1,3 +1,54 @@
+async function updatePriceTicker() {
+  try {
+    const response = await getRequest("/ticker_status");
+    if (!response || !response.tickers) {
+      console.error('No ticker data received');
+      return;
+    }
+
+    const tickerContainer = document.getElementById('priceTicker');
+    if (!tickerContainer) {
+      console.error('Ticker container not found');
+      return;
+    }
+
+    let tickerContent = '';
+    response.tickers.forEach(ticker => {
+      if (ticker.price !== null && ticker.change_percent !== null) {
+        const formattedPrice = parseFloat(ticker.price).toLocaleString();
+        const changeSign = ticker.change_percent >= 0 ? '▲' : '▼';
+        const direction = ticker.change_percent >= 0 ? 'UP' : 'DOWN';
+        const tickerClass = ticker.change_percent >= 0 ? 'up' : 'down';
+        
+        tickerContent += `
+          <div class="ticker-item ${tickerClass}">
+            <span class="symbol">${ticker.symbol}</span>
+            <span class="arrow">${changeSign}</span>
+            <span>${direction} (${Math.abs(ticker.change_percent).toFixed(2)}%)</span>
+          </div>`;
+      }
+    });
+
+    // Double the content for seamless looping
+    tickerContent = tickerContent + tickerContent;
+    tickerContainer.innerHTML = tickerContent;
+
+    console.log('Ticker updated with', response.tickers.length, 'stocks');
+  } catch (error) {
+    console.error('Error updating price ticker:', error);
+  }
+}
+
+function startTickerUpdates() {
+  // Initial update
+  updatePriceTicker();
+  
+  // Update every 15 seconds
+  setInterval(() => {
+    updatePriceTicker();
+  }, 15000);
+}
+
 async function getPinned_Tickers() {
   const tbody = document.getElementById("stockTableBody");
   if (!tbody) return;
@@ -27,6 +78,9 @@ async function getPinned_Tickers() {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+  // Initialize price ticker
+  startTickerUpdates();
+  
   // Tải dữ liệu cổ phiếu đã ghim
   await getPinned_Tickers();
   

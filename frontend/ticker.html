@@ -113,17 +113,16 @@
 
       /* Text Note Styling */
       #text-note {
-        background: rgba(255, 255, 255, 0.95);
+        background: rgba(17, 24, 39, 0.95);
         backdrop-filter: blur(10px);
         padding: 1.5rem 2rem;
         border-radius: 1rem;
         box-shadow: 
-          0 4px 6px -1px rgba(0, 0, 0, 0.1),
-          0 2px 4px -1px rgba(0, 0, 0, 0.06),
-          0 0 0 1px rgba(0, 0, 0, 0.05);
+          0 4px 6px -1px rgba(0, 0, 0, 0.2),
+          0 2px 4px -1px rgba(0, 0, 0, 0.1);
         position: relative;
         transition: all 0.3s ease;
-        border-left: 4px solid #3b82f6;
+        border-left: 4px solid #10b981;
       }
 
       #text-note::before {
@@ -131,7 +130,7 @@
         display: block;
         font-size: 0.875rem;
         font-weight: 600;
-        color: #3b82f6;
+        color: #10b981;
         margin-bottom: 0.5rem;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -140,9 +139,9 @@
       #text-note:hover {
         transform: translateY(-2px);
         box-shadow: 
-          0 10px 15px -3px rgba(0, 0, 0, 0.1),
-          0 4px 6px -2px rgba(0, 0, 0, 0.05),
-          0 0 0 1px rgba(0, 0, 0, 0.05);
+          0 10px 15px -3px rgba(0, 0, 0, 0.3),
+          0 4px 6px -2px rgba(0, 0, 0, 0.2);
+        background: rgba(17, 24, 39, 0.98);
       }
     </style>
   </head>
@@ -192,36 +191,41 @@
       <div class="max-w-4xl mx-auto px-4">
         <!-- Charts Section -->
         <div class="grid grid-cols-1 gap-8 mb-10">
-          <!-- Consumer Behavior Chart -->
-
-          <!-- Stock Price Chart -->
-          <div class="bg-white rounded-lg shadow-md p-6">
+          <!-- Price and Volume Chart -->
+          <div class="bg-gray-800 rounded-lg shadow-md p-6 border border-gray-700">
             <div class="flex justify-between items-center mb-4">
-              <h3 class="text-xl font-semibold">Biểu đồ giá cổ phiếu</h3>
+              <h3 class="text-xl font-semibold text-green-400">Biểu đồ giá & Khối lượng</h3>
+              <div class="flex space-x-2">
+                <button id="btn30d" class="px-3 py-1 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-200">30D</button>
+                <button id="btn90d" class="px-3 py-1 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-200">90D</button>
+                <button id="btn180d" class="px-3 py-1 rounded-lg bg-gray-700 hover:bg-gray-600 text-gray-200">180D</button>
+              </div>
             </div>
-            <canvas id="stockChart" height="180"></canvas>
+            <canvas id="stockChart" height="280"></canvas>
           </div>
+          
+          <!-- End of Charts Section -->
           <div class="mt-8">
             <!-- Prediction Stats Block -->
-            <div id="prediction-stats" class="mb-6 bg-white rounded-lg shadow-md p-6">
-              <h3 class="text-xl font-semibold mb-4">Chỉ số dự đoán</h3>
+            <div id="prediction-stats" class="mb-6 bg-gray-800 rounded-lg shadow-md p-6 border border-gray-700">
+              <h3 class="text-xl font-semibold mb-4 text-green-400">Chỉ số dự đoán</h3>
               <div class="grid grid-cols-3 gap-4">
-                <div class="p-4 bg-gray-50 rounded-lg">
-                  <div class="text-sm text-gray-600">Xu hướng</div>
-                  <div id="direction-value" class="text-lg font-semibold"></div>
+                <div class="p-4 bg-gray-900 rounded-lg border border-gray-700">
+                  <div class="text-sm text-gray-400">Xu hướng</div>
+                  <div id="direction-value" class="text-lg font-semibold text-gray-200"></div>
                 </div>
-                <div class="p-4 bg-gray-50 rounded-lg">
-                  <div class="text-sm text-gray-600">Xác suất tăng</div>
-                  <div id="uptrend-value" class="text-lg font-semibold"></div>
+                <div class="p-4 bg-gray-900 rounded-lg border border-gray-700">
+                  <div class="text-sm text-gray-400">Xác suất tăng</div>
+                  <div id="uptrend-value" class="text-lg font-semibold text-gray-200"></div>
                 </div>
-                <div class="p-4 bg-gray-50 rounded-lg">
-                  <div class="text-sm text-gray-600">Xác suất ổn định</div>
-                  <div id="stable-value" class="text-lg font-semibold"></div>
+                <div class="p-4 bg-gray-900 rounded-lg border border-gray-700">
+                  <div class="text-sm text-gray-400">Xác suất ổn định</div>
+                  <div id="stable-value" class="text-lg font-semibold text-gray-200"></div>
                 </div>
               </div>
             </div>
             <!-- Investment Advice Block -->
-            <div id="text-note" class="text-lg leading-relaxed"></div>
+            <div id="text-note" class="text-lg leading-relaxed bg-gray-800 rounded-lg shadow-md p-6 border border-gray-700 text-gray-200"></div>
           </div>
         </div>
       </div>
@@ -265,122 +269,245 @@
 
     <script src="api.js"></script>
     <script>
-      // Sample data for charts
       document.addEventListener("DOMContentLoaded", function () {
+        let mainChart = null;
         let chartRendering = true;
-        // Patch hideLoading to handle chart rendering state
+
+        // Set up loading state handler
         const originalHideLoading = window.hideLoading;
-        window.hideLoading = function () {
+        window.hideLoading = function() {
           if (chartRendering) {
             if (window.showLoading) window.showLoading();
           } else {
             if (originalHideLoading) originalHideLoading();
           }
         };
-        async function loadTickers() {
-          if (window.showLoading) showLoading();
-          const urlParams = new URLSearchParams(window.location.search);
-          const symbol = urlParams.get("symbol");
 
-          // Fetch ticker info (symbol, company name)
-          const tickerInfo = await getRequest(`/ticker_data?symbol=${symbol}&days=0`);
-          if (tickerInfo && tickerInfo.symbol) {
-            document.getElementById("ticker-info-card").style.display = "flex";
-            document.getElementById("ticker-symbol").innerText = tickerInfo.symbol;
-            document.getElementById("ticker-company").innerText = tickerInfo.company_name || "";
-          }
+        async function loadTickers(days = 30) {
+          try {
+            chartRendering = true;
+            if (window.showLoading) showLoading();
+            const urlParams = new URLSearchParams(window.location.search);
+            const symbol = urlParams.get("symbol");
 
-          // Continue with prediction and chart
-          const [response, predictionResponse] = await Promise.all([
-            getRequest(`/ticker_data?symbol=${symbol}`),
-            getRequest(`/prediction_data?symbol=${symbol}`),
-          ]);
-          console.log(response.data);
+            if (!symbol) {
+              throw new Error("No symbol provided");
+              return;
+            }
 
-          const simplifiedData = response.data.map((entry) => {
-            const dateKey = Object.keys(entry).find((k) => k.includes("Date"));
-            const closeKey = Object.keys(entry).find((k) => k.includes("Close"));
-            return {
-              date: entry[dateKey],
-              close: entry[closeKey],
-            };
-          });
+            // Fetch all data in parallel
+            const [tickerInfo, response, predictionResponse] = await Promise.all([
+              getRequest(`/ticker_data?symbol=${symbol}&days=0`),
+              getRequest(`/ticker_data?symbol=${symbol}&days=${days}`),
+              getRequest(`/prediction_data?symbol=${symbol}`)
+            ]);
 
-          const predictData = predictionResponse.predicted_price;
+            // Update ticker info
+            if (tickerInfo && tickerInfo.symbol) {
+              document.getElementById("ticker-info-card").style.display = "flex";
+              document.getElementById("ticker-symbol").innerText = tickerInfo.symbol;
+              document.getElementById("ticker-company").innerText = tickerInfo.company_name || "";
+            }
 
-          // Tính ngày tiếp theo
-          const lastDateObj = new Date(simplifiedData[simplifiedData.length - 1].date);
-          lastDateObj.setUTCDate(lastDateObj.getUTCDate() + 1);
-          const nextDateStr = lastDateObj.toISOString().split("T")[0];
+            if (!response.data || response.data.length === 0) {
+              throw new Error("No data received from API");
+            }
 
-          // Tạo labels và dữ liệu cho chart
-          const chartLabels = simplifiedData.map((item) => item.date).concat(nextDateStr);
-          const actualPrices = simplifiedData.map((item) => item.close).concat(null);
-          const predictedPrices = Array(simplifiedData.length).fill(null).concat(predictData);
+            // Process chart data
+            const simplifiedData = response.data.map((entry) => {
+              const dateKey = Object.keys(entry).find(k => k.includes("Date"));
+              const closeKey = Object.keys(entry).find(k => k.includes("Close"));
+              const volumeKey = Object.keys(entry).find(k => k.includes("Volume"));
+              return {
+                date: entry[dateKey],
+                close: parseFloat(entry[closeKey]),
+                volume: parseFloat(entry[volumeKey])
+              };
+            }).filter(d => d.date && !isNaN(d.close));
 
-          // Cập nhật các chỉ số dự đoán
-          document.getElementById("direction-value").innerText = predictionResponse.direction;
-          document.getElementById("uptrend-value").innerText = (predictionResponse.probabilities[2] * 100).toFixed(1) + "%";
-          document.getElementById("stable-value").innerText = (predictionResponse.probabilities[1] * 100).toFixed(1) + "%";
+            // Calculate next date for prediction
+            const lastDateObj = new Date(simplifiedData[simplifiedData.length - 1].date);
+            lastDateObj.setDate(lastDateObj.getDate() + 1);
+            const nextDateStr = lastDateObj.toISOString().split('T')[0];
 
-          // Cập nhật khuyến nghị
-          document.getElementById("text-note").innerText = predictionResponse.advice;
-          // Stock Price Chart
-          const stockCtx = document.getElementById("stockChart").getContext("2d");
-          const stockChart = new Chart(stockCtx, {
-            type: "line",
-            data: {
-              labels: chartLabels,
-              datasets: [
-                {
-                  label: "Giá cổ phiếu: ",
-                  data: actualPrices,
-                  backgroundColor: "rgba(16, 185, 129, 0.2)",
-                  borderColor: "rgba(16, 185, 129, 1)",
-                  tension: 0.4,
-                  fill: true,
-                },
-                {
-                  label: "Giá dự đoán",
-                  data: predictedPrices,
-                  borderColor: "rgba(255,0,0,0)",
-                  backgroundColor: "rgba(255,0,0,1)",
-                  pointRadius: 8,
-                  pointBackgroundColor: "rgba(255,0,0,1)",
-                  showLine: false,
-                },
-              ],
-            },
-            options: {
-              responsive: true,
-              plugins: {
-                legend: {
-                  display: false,
-                },
-                tooltip: {
-                  callbacks: {
-                    title: (tooltipItems) => {
-                      const datasetLabel = tooltipItems[0].dataset.label;
-                      const originalDate = tooltipItems[0].label;
-                      if (datasetLabel === "Giá dự đoán") {
-                        return "Dự đoán cho ngày " + originalDate;
-                      }
-                      return originalDate; // giữ nguyên với giá thật
-                    },
+            // Prepare chart data
+            const chartLabels = simplifiedData.map(d => d.date).concat(nextDateStr);
+            const actualPrices = simplifiedData.map(d => d.close).concat(null);
+            const volumes = simplifiedData.map(d => d.volume);
+            const predictedPrices = Array(simplifiedData.length).fill(null).concat(predictionResponse.predicted_price);
+
+            // Update prediction indicators
+            document.getElementById("direction-value").innerText = predictionResponse.direction;
+            document.getElementById("uptrend-value").innerText = (predictionResponse.probabilities[2] * 100).toFixed(1) + "%";
+            document.getElementById("stable-value").innerText = (predictionResponse.probabilities[1] * 100).toFixed(1) + "%";
+            document.getElementById("text-note").innerText = predictionResponse.advice;
+
+            // Update chart
+            if (mainChart) {
+              mainChart.destroy();
+            }
+
+            const stockCtx = document.getElementById("stockChart").getContext("2d");
+            mainChart = new Chart(stockCtx, {
+              type: 'line',
+              data: {
+                labels: chartLabels,
+                datasets: [
+                  {
+                    label: 'Giá cổ phiếu',
+                    data: actualPrices,
+                    yAxisID: 'price',
+                    borderColor: 'rgba(59, 130, 246, 1)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 2,
+                    borderWidth: 2,
+                    order: 0
                   },
-                },
+                  {
+                    label: 'Dự đoán',
+                    data: predictedPrices,
+                    yAxisID: 'price',
+                    borderColor: 'rgba(16, 185, 129, 1)',
+                    borderDash: [5, 5],
+                    pointRadius: 4,
+                    pointBackgroundColor: 'rgba(16, 185, 129, 1)',
+                    fill: false,
+                    order: 0
+                  },
+                  {
+                    label: 'Khối lượng',
+                    data: volumes,
+                    yAxisID: 'volume',
+                    type: 'bar',
+                    backgroundColor: 'rgba(156, 163, 175, 0.3)',
+                    borderColor: 'rgba(156, 163, 175, 0.5)',
+                    order: 1
+                  }
+                ]
               },
-              animation: {
-                onComplete: function () {
-                  chartRendering = false;
-                  if (originalHideLoading) originalHideLoading();
+              options: {
+                responsive: true,
+                interaction: {
+                  mode: 'index',
+                  intersect: false
                 },
-              },
-            },
-          });
+                plugins: {
+                  legend: {
+                    position: 'top',
+                    labels: {
+                      color: '#9ca3af'
+                    }
+                  },
+                  tooltip: {
+                    mode: 'index',
+                    intersect: false,
+                    backgroundColor: 'rgba(17, 24, 39, 0.8)',
+                    titleColor: '#fff',
+                    bodyColor: '#fff',
+                    callbacks: {
+                      label: function(context) {
+                        let label = context.dataset.label || '';
+                        if (label) {
+                          label += ': ';
+                        }
+                        if (context.dataset.yAxisID === 'volume') {
+                          label += context.parsed.y.toLocaleString();
+                        } else {
+                          label += context.parsed.y.toLocaleString() + ' VND';
+                        }
+                        return label;
+                      }
+                    }
+                  }
+                },
+                scales: {
+                  price: {
+                    type: 'linear',
+                    position: 'left',
+                    title: {
+                      display: true,
+                      text: 'Giá (VND)',
+                      color: '#9ca3af'
+                    },
+                    ticks: {
+                      color: '#9ca3af',
+                      callback: function(value) {
+                        return value.toLocaleString() + ' VND';
+                      }
+                    },
+                    grid: {
+                      color: 'rgba(75, 85, 99, 0.3)'
+                    }
+                  },
+                  volume: {
+                    type: 'linear',
+                    position: 'right',
+                    title: {
+                      display: true,
+                      text: 'Khối lượng',
+                      color: '#9ca3af'
+                    },
+                    ticks: {
+                      color: '#9ca3af',
+                      callback: function(value) {
+                        return value.toLocaleString();
+                      }
+                    },
+                    grid: {
+                      display: false
+                    }
+                  },
+                  x: {
+                    ticks: {
+                      color: '#9ca3af'
+                    },
+                    grid: {
+                      color: 'rgba(75, 85, 99, 0.3)'
+                    }
+                  }
+                },
+                animation: {
+                  duration: 600,
+                  onComplete: function() {
+                    chartRendering = false;
+                    if (window.hideLoading) window.hideLoading();
+                  }
+                }
+              }
+            });
+          } catch (error) {
+            console.error('Error loading ticker data:', error);
+            chartRendering = false;
+            if (window.hideLoading) window.hideLoading();
+          }
         }
-        loadTickers();
-        // Consumer Behavior Chart
+
+        // Add event listeners for period buttons
+        const periodButtons = document.querySelectorAll('#btn30d, #btn90d, #btn180d');
+        periodButtons.forEach(button => {
+          button.addEventListener('click', function() {
+            // Remove active class from all buttons
+            periodButtons.forEach(btn => {
+              btn.classList.remove('bg-green-600');
+              btn.classList.add('bg-gray-700');
+            });
+            
+            // Add active class to clicked button
+            this.classList.remove('bg-gray-700');
+            this.classList.add('bg-green-600');
+            
+            // Get days from button ID and load data
+            const days = parseInt(this.id.replace('btn', '').replace('d', ''));
+            loadTickers(days);
+          });
+        });
+
+        // Initial load with 30 days
+        document.getElementById('btn30d').classList.add('bg-green-600');
+        document.getElementById('btn30d').classList.remove('bg-gray-700');
+        loadTickers(30);
       });
     </script>
   </body>

@@ -17,6 +17,24 @@ ticker_data_cache = {}
 # Global cache for prediction results: (symbol, lookback_days) -> (result, timestamp)
 prediction_cache = {}
 PREDICTION_CACHE_TTL = 300  # seconds (5 minutes)
+
+# Cache management function
+def get_cached_prediction(symbol: str, lookback_days: int) -> tuple[dict | None, float | None]:
+    cache_key = (symbol, lookback_days)
+    if cache_key in prediction_cache:
+        result, cached_time = prediction_cache[cache_key]
+        now = time.time()
+        if now - cached_time < PREDICTION_CACHE_TTL:
+            print(f"Cache hit for {symbol} (age: {now - cached_time:.1f}s)")
+            return result, cached_time
+    return None, None
+
+def cache_prediction(symbol: str, lookback_days: int, result: dict):
+    cache_key = (symbol, lookback_days)
+    now = time.time()
+    prediction_cache[cache_key] = (result, now)
+    print(f"Cached prediction for {symbol}")
+
 DEFAULT_TICKERS = ["VCB.VN", "VIC.VN", "VHM.VN", "HPG.VN", "FPT.VN", "BID.VN", "GAS.VN", "VNM.VN", "TCB.VN", "CTG.VN", "VPB.VN", "MBB.VN", "ACB.VN", "MSN.VN", "MWG.VN", "GVR.VN", "STB.VN", "HDB.VN", "SSI.VN", "VRE.VN", "SAB.VN", "PLX.VN", "VJC.VN", "TPB.VN", "POW.VN", "DGC.VN", "PNJ.VN", "BVH.VN", "REE.VN", "KDH.VN", "EIB.VN", "OCB.VN", "MSB.VN", "LPB.VN", "SHB.VN", "VIB.VN", "PDR.VN", "DXG.VN", "HSG.VN", "PC1.VN", ]
 # DEFAULT_TICKERS = ["VCB.VN", "VIC.VN", "VHM.VN", ]
 # CSV file paths
@@ -111,13 +129,10 @@ class PredictionRequest(BaseModel):
 @app.get("/prediction_data")
 def get_prediction_data(symbol: str = Query(..., description="Ticker symbol, e.g. AAPL"), lookback_days: int = Query(130, description="Lookback days for features")):
     try:
-        cache_key = (symbol, lookback_days)
-        now = time.time()
-        # Check cache
-        if cache_key in prediction_cache:
-            cached_result, cached_time = prediction_cache[cache_key]
-            if now - cached_time < PREDICTION_CACHE_TTL:
-                return cached_result
+        # Check cache first
+        cached_result, _ = get_cached_prediction(symbol, lookback_days)
+        if cached_result:
+            return cached_result
         # Not cached or expired, compute prediction
         predictor = StockPredictor(symbol, lookback_days=lookback_days)
         if not predictor.fetch_data():
@@ -144,7 +159,8 @@ def get_prediction_data(symbol: str = Query(..., description="Ticker symbol, e.g
             "probabilities": list(prediction['probabilities']),
             "advice": advice
         }
-        prediction_cache[cache_key] = (result, now)
+        # Cache the prediction result
+        cache_prediction(symbol, lookback_days, result)
         return result
     except Exception as e:
         return {"error": str(e), "trace": traceback.format_exc()}
@@ -204,8 +220,8 @@ def prefetch_ticker_data():
                             "probabilities": list(prediction['probabilities']),
                             "advice": advice
                         }
-                        cache_key = (symbol, 130)
-                        prediction_cache[cache_key] = (result, time.time())
+                        # Cache the prediction with default lookback days
+                        cache_prediction(symbol, 130, result)
                         print(f"Prefilled prediction cache for {symbol}")
             else:
                 print(f"Failed to prefetch {symbol}")

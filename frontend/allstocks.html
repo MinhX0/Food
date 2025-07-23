@@ -115,7 +115,24 @@
         </p>
       </div>
       <div class="bg-gray-800 p-6 rounded-lg shadow-md mt-8">
-        <h3 class="text-xl font-bold mb-4 text-green-400">Tất cả cổ phiếu</h3>
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-xl font-bold text-green-400">Tất cả cổ phiếu</h3>
+          <div class="relative" id="sortDropdown">
+            <button class="flex items-center gap-2 px-4 py-2 bg-gray-900 text-gray-300 rounded-lg border border-gray-700 hover:border-green-400 hover:text-green-400 transition-colors duration-300">
+              <i class="fas fa-sort"></i>
+              <span>Sắp xếp theo</span>
+              <i class="fas fa-chevron-down text-xs"></i>
+            </button>
+            <div class="hidden absolute right-0 mt-2 w-48 bg-gray-900 border border-gray-700 rounded-lg shadow-lg z-10">
+              <div class="py-1">
+                <button class="w-full px-4 py-2 text-left text-gray-300 hover:bg-gray-800 hover:text-green-400" data-sort="symbol">Mã cổ phiếu</button>
+                <button class="w-full px-4 py-2 text-left text-gray-300 hover:bg-gray-800 hover:text-green-400" data-sort="company">Tên công ty</button>
+                <button class="w-full px-4 py-2 text-left text-gray-300 hover:bg-gray-800 hover:text-green-400" data-sort="price">Giá</button>
+                <button class="w-full px-4 py-2 text-left text-gray-300 hover:bg-gray-800 hover:text-green-400" data-sort="change">Thay đổi</button>
+              </div>
+            </div>
+          </div>
+        </div>
         <table class="min-w-full table-auto text-sm text-gray-100">
           <thead class="bg-gray-900">
             <tr>
@@ -192,6 +209,12 @@
           });
           updatePinButtonState(btn, true);
         }
+        
+        // Re-sort the list after pinning/unpinning
+        const res = await fetch("http://localhost:8000/get_preferences");
+        const { preferences: pinnedSymbols } = await res.json();
+        const sortedStocks = sortStocks(stockDataGlobal, currentSort.field, pinnedSymbols);
+        renderStocks(sortedStocks, "stockTableBodyAll");
       }
 
       function updatePinButtonState(btn, isPinned) {
@@ -222,9 +245,61 @@
         });
       }
 
+      let currentSort = { field: 'symbol', ascending: true };
+      let stockDataGlobal = [];
+
+      function sortStocks(stocks, field, pinnedSymbols) {
+        // First separate pinned and unpinned stocks
+        const pinnedStocks = stocks.filter(stock => pinnedSymbols.includes(stock.symbol));
+        const unpinnedStocks = stocks.filter(stock => !pinnedSymbols.includes(stock.symbol));
+        
+        // Sort function
+        const sortFn = (a, b) => {
+          let valueA, valueB;
+          
+          switch(field) {
+            case 'symbol':
+              valueA = a.symbol;
+              valueB = b.symbol;
+              break;
+            case 'company':
+              valueA = a.company_name;
+              valueB = b.company_name;
+              break;
+            case 'price':
+              valueA = a.price || 0;
+              valueB = b.price || 0;
+              break;
+            case 'change':
+              valueA = a.change_percent || 0;
+              valueB = b.change_percent || 0;
+              break;
+            default:
+              valueA = a.symbol;
+              valueB = b.symbol;
+          }
+          
+          if (typeof valueA === 'string') valueA = valueA.toLowerCase();
+          if (typeof valueB === 'string') valueB = valueB.toLowerCase();
+          
+          return currentSort.ascending ? 
+            (valueA > valueB ? 1 : -1) : 
+            (valueA < valueB ? 1 : -1);
+        };
+
+        // Sort pinned and unpinned stocks separately
+        pinnedStocks.sort(sortFn);
+        unpinnedStocks.sort(sortFn);
+
+        // Combine them with pinned stocks at the top
+        return [...pinnedStocks, ...unpinnedStocks];
+      }
+
       function renderStocks(stockData, elementInnerHTML) {
         const tbody = document.getElementById(elementInnerHTML);
         tbody.innerHTML = "";
+        
+        stockDataGlobal = stockData; // Store for sorting later
 
         stockData.forEach((stock) => {
           const row = document.createElement("tr");
@@ -273,7 +348,7 @@
         <td class="px-4 py-2 text-center align-middle" style="width:120px">${
           stock && stock.price != null
             ? stock.price.toLocaleString() +
-              (stock.symbol.toLowerCase().endsWith(".vn") ? " vnđ" : "")
+              (stock.symbol.toLowerCase().endsWith(".vn") ? " VND" : " USD")
             : "N/A"
         }</td>
         <td class="px-4 py-2 text-center align-middle ${changeColor}" style="width:120px">${changeDisplay}</td>
@@ -288,11 +363,51 @@
 
       // Khởi động sau khi DOM đã sẵn sàng
       document.addEventListener("DOMContentLoaded", async () => {
+        // Toggle sort dropdown
+        const sortButton = document.querySelector('#sortDropdown button');
+        const sortMenu = document.querySelector('#sortDropdown div');
+        
+        sortButton.addEventListener('click', () => {
+          sortMenu.classList.toggle('hidden');
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+          if (!sortButton.contains(e.target) && !sortMenu.contains(e.target)) {
+            sortMenu.classList.add('hidden');
+          }
+        });
+
+        // Handle sort options
+        document.querySelectorAll('[data-sort]').forEach(button => {
+          button.addEventListener('click', async () => {
+            const field = button.dataset.sort;
+            if (currentSort.field === field) {
+              currentSort.ascending = !currentSort.ascending;
+            } else {
+              currentSort.field = field;
+              currentSort.ascending = true;
+            }
+            
+            const res = await fetch("http://localhost:8000/get_preferences");
+            const { preferences: pinnedSymbols } = await res.json();
+            
+            const sortedStocks = sortStocks(stockDataGlobal, field, pinnedSymbols);
+            renderStocks(sortedStocks, "stockTableBodyAll");
+            
+            sortMenu.classList.add('hidden');
+          });
+        });
+
         async function loadTickers() {
           const data = await getRequest("/ticker_status");
           const listTickerStatus = data.tickers;
           if (listTickerStatus) {
-            renderStocks(listTickerStatus, "stockTableBodyAll");
+            stockDataGlobal = listTickerStatus;
+            const res = await fetch("http://localhost:8000/get_preferences");
+            const { preferences: pinnedSymbols } = await res.json();
+            const sortedStocks = sortStocks(listTickerStatus, 'symbol', pinnedSymbols);
+            renderStocks(sortedStocks, "stockTableBodyAll");
           }
         }
         loadTickers();
