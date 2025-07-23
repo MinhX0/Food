@@ -144,11 +144,20 @@
       <!-- Header and Stock Selection -->
       <div class="mb-10">
         <div class="flex flex-col items-center mb-6">
-          <h2 class="text-4xl font-bold mb-4 animated-text">THÔNG TIN CỔ PHIẾU</h2>
-          <div id="ticker-info-card" class="w-full max-w-md bg-white rounded-xl shadow-lg p-6 flex flex-col items-center mb-4 border border-blue-100" style="display:none;">
-            <div class="flex flex-col items-center">
-              <div class="text-2xl font-bold text-blue-700 mb-1" id="ticker-symbol"></div>
-              <div class="text-lg text-gray-700 mb-2" id="ticker-company"></div>
+          <h2 class="text-4xl font-bold mb-8 animated-text">THÔNG TIN CỔ PHIẾU</h2>
+          <div id="ticker-info-card" class="w-full max-w-md bg-gray-800/80 backdrop-blur-lg rounded-xl shadow-lg p-6 flex flex-col items-center mb-4 border border-gray-700" style="display:none;">
+            <div class="flex flex-col items-center relative">
+              <div class="absolute -top-10 left-1/2 transform -translate-x-1/2 w-16 h-16 bg-gray-900/90 rounded-full flex items-center justify-center border-4 border-green-500 shadow-lg">
+                <i class="fas fa-chart-line text-2xl text-green-400"></i>
+              </div>
+              <div class="text-3xl font-bold text-green-400 mt-6 mb-2" id="ticker-symbol"></div>
+              <div class="text-lg text-gray-300 mb-3" id="ticker-company"></div>
+              <div class="flex flex-col items-center gap-1">
+                <div class="flex items-center gap-2 text-xs text-gray-500">
+                  <i class="fas fa-database"></i>
+                  <span>Data provided by Yahoo! Finance</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

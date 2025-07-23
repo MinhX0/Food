@@ -292,9 +292,9 @@ class StockPredictor:
         elif direction == 1:
             # Stable: provide more nuanced advice
             if confidence > 0.5:
-                return "GIỮ - Thị trường dự báo ổn định, nên giữ vị thế hiện tại"
+                return "KHÔNG KHUYẾN NGHỊ - Thị trường dự báo ổn định, nên giữ vị thế hiện tại"
             elif abs(predicted_return) < 0.01:
-                return "GIỮ - Biến động dự đoán rất nhỏ, nên quan sát thêm"
+                return "KHÔNG KHUYẾN NGHỊ - Biến động dự đoán rất nhỏ, nên quan sát thêm"
             else:
                 return "KHÔNG NÊN ĐẦU TƯ - Thị trường có thể dao động trong khoảng hẹp"
         elif confidence < 0.2:
