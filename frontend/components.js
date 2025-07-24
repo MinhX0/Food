@@ -71,4 +71,9 @@ function initComponents() {
     if (headerPlaceholder) headerPlaceholder.innerHTML = renderHeader();
     if (footerPlaceholder) footerPlaceholder.innerHTML = renderFooter();
     if (spinnerPlaceholder) spinnerPlaceholder.innerHTML = renderLoadingSpinner();
+
+    // Initialize chatbot
+    if (window.initializeChatbot) {
+        window.initializeChatbot();
+    }
 }
