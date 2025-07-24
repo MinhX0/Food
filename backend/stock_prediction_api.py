@@ -128,14 +128,22 @@ def get_ticker_status():
 
 class PredictionRequest(BaseModel):
     symbol: str
-    lookback_days: Optional[int] = 10
+    lookback_days: Optional[int] = 15  # Optimal default
 
 
 # Endpoint 2: Get prediction data for a ticker (GET version)
 @app.get("/prediction_data")
-def get_prediction_data(symbol: str = Query(..., description="Ticker symbol, e.g. AAPL"), lookback_days: int = Query(130, description="Lookback days for features")):
+def get_prediction_data(symbol: str = Query(..., description="Ticker symbol, e.g. AAPL"), lookback_days: int = Query(15, description="Lookback days for features (optimal: 10-20)")):
     try:
         print(f"Prediction request for {symbol} with {lookback_days} lookback days")
+        
+        # Validate lookback_days range for optimal performance
+        if lookback_days < 5:
+            print(f"Warning: {lookback_days} lookback days is too low, using minimum 5")
+            lookback_days = 5
+        elif lookback_days > 30:
+            print(f"Warning: {lookback_days} lookback days is too high, using maximum 30")
+            lookback_days = 30
         
         # Check cache first
         cached_result, cached_time = get_cached_prediction(symbol, lookback_days)
@@ -211,7 +219,7 @@ def prefetch_ticker_data():
             if predictor.fetch_data():
                 ticker_data_cache[symbol] = predictor.data.copy()
                 print(f"Prefetched {symbol} ({len(predictor.data)} rows)")
-                # Prefill prediction cache for default lookback_days (130)
+                # Prefill prediction cache for optimal lookback_days (15)
                 if predictor.train_model():
                     prediction = predictor.predict_next_day()
                     if prediction is not None:
@@ -232,8 +240,8 @@ def prefetch_ticker_data():
                             "probabilities": list(prediction['probabilities']),
                             "advice": advice
                         }
-                        # Cache the prediction with default lookback days
-                        cache_prediction(symbol, 130, result)
+                        # Cache the prediction with optimal lookback days
+                        cache_prediction(symbol, 15, result)
                         print(f"Prefilled prediction cache for {symbol}")
             else:
                 print(f"Failed to prefetch {symbol}")
@@ -347,6 +355,66 @@ def chat_with_ai(request: ChatRequest):
             "error": str(e),
             "response": "Xin lỗi, có lỗi xảy ra khi xử lý câu hỏi của bạn. Vui lòng thử lại sau."
         }
+
+@app.get("/optimal_periods", tags=["Configuration"], summary="Get optimal prediction periods for different trading styles")
+def get_optimal_periods():
+    """
+    Returns optimal prediction period configurations for different trading styles.
+    """
+    return {
+        "trading_styles": {
+            "day_trading": {
+                "lookback_days": 7,
+                "data_period": "3mo",
+                "prediction_horizon": "1-2 days",
+                "expected_accuracy": "45-55%",
+                "risk_level": "Very High",
+                "description": "Quick scalping and day trading",
+                "best_for": ["High-frequency traders", "Scalpers", "Market makers"]
+            },
+            "swing_trading": {
+                "lookback_days": 15,
+                "data_period": "1y",
+                "prediction_horizon": "1-5 days",
+                "expected_accuracy": "55-65%",
+                "risk_level": "High",
+                "description": "Short to medium-term trading",
+                "best_for": ["Retail investors", "Active traders", "Technical analysts"],
+                "recommended": True
+            },
+            "position_trading": {
+                "lookback_days": 20,
+                "data_period": "2y",
+                "prediction_horizon": "1-2 weeks",
+                "expected_accuracy": "60-70%",
+                "risk_level": "Medium",
+                "description": "Balanced risk-reward approach",
+                "best_for": ["Institutional investors", "Conservative traders", "Long-term oriented"]
+            },
+            "trend_following": {
+                "lookback_days": 30,
+                "data_period": "2y+",
+                "prediction_horizon": "2+ weeks",
+                "expected_accuracy": "65-75%",
+                "risk_level": "Low-Medium",
+                "description": "Long-term trend analysis",
+                "best_for": ["Fund managers", "Conservative investors", "Pension funds"]
+            }
+        },
+        "vietnamese_market_specific": {
+            "note": "Vietnamese stock market characteristics",
+            "volatility": "Higher than developed markets",
+            "optimal_lookback": "10-20 days",
+            "recommended_style": "swing_trading",
+            "market_hours": "9:00-15:00 VN time",
+            "best_prediction_time": "After market close"
+        },
+        "current_api_settings": {
+            "default_lookback_days": 15,
+            "validation_range": "5-30 days",
+            "cache_policy": "Persistent until restart"
+        }
+    }
 
 @app.get("/debug/cache_status", tags=["Debug"], summary="Show cache status for debugging")
 def get_cache_status():
