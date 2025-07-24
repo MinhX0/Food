@@ -295,85 +295,49 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  async function handlePinUnpin(btn, symbol, changeHTML) {
-    const pinnedContainer = document.getElementById("pinnedStocks");
-    if (!pinnedContainer) return;
-
-    // Lấy danh sách mã đã ghim hiện tại
-    const pinnedItems = Array.from(pinnedContainer.children)
-      .map((item) => {
-        const strong = item.querySelector("strong");
-        return strong ? strong.textContent.trim() : null;
-      })
-      .filter(Boolean);
-
-    const isPinned = pinnedItems.includes(symbol);
+  async function handlePinUnpin(btn, symbol) {
+    const isPinned = btn.getAttribute('data-pinned') === 'true';
 
     if (isPinned) {
       // Gỡ ghim
-      const existingItem = Array.from(pinnedContainer.children).find((item) => {
-        const strong = item.querySelector("strong");
-        return strong && strong.textContent.trim() === symbol;
-      });
-      if (existingItem) existingItem.remove();
       await fetch("http://localhost:8000/remove_preference", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ symbol }),
       });
+      // Remove the row from the pinned stocks table if it exists
+      const pinnedTableRow = document.querySelector(`#stockTableBody tr td a[href="ticker.html?symbol=${symbol}"]`)?.closest('tr');
+      if (pinnedTableRow) {
+        pinnedTableRow.remove();
+      }
       // Cập nhật trạng thái nút sau khi gỡ ghim
       updatePinButtonState(btn, false);
     } else {
       // Ghim
-      const pinnedItem = document.createElement("div");
-      pinnedItem.className = "pinned-stock bg-gray-700 px-3 py-2 rounded-lg flex items-center gap-2 text-sm";
-      pinnedItem.innerHTML = `
-        <span class="flex items-center"><strong class="text-green-400">${symbol}</strong> <span class="ml-2 text-gray-300">${changeHTML}</span></span>
-        <i class="fas fa-times text-gray-400 hover:text-red-600 cursor-pointer unpin-btn ml-2"></i>
-      `;
-      pinnedContainer.appendChild(pinnedItem);
-      pinnedItem
-        .querySelector(".unpin-btn")
-        .addEventListener("click", async () => {
-          pinnedItem.remove();
-          updatePinButtonState(btn, false);
-          await fetch("http://localhost:8000/remove_preference", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ symbol }),
-          });
-          // Cập nhật lại tất cả các nút pin
-          handleBtnPin();
-        });
-
-      // Cập nhật trạng thái nút sau khi ghim
-      updatePinButtonState(btn, true);
       await fetch("http://localhost:8000/save_preference", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ symbol }),
       });
+      
+      // Cập nhật trạng thái nút sau khi ghim
+      updatePinButtonState(btn, true);
+      
+      // Refresh the pinned stocks table
+      await getPinned_Tickers();
     }
   }
 
-  function handleBtnPin() {
-    // Lấy danh sách mã đã ghim từ pinnedStocks
-    const pinnedContainer = document.getElementById("pinnedStocks");
-
-    if (!pinnedContainer) return;
-
-    const pinnedItems = Array.from(pinnedContainer.children)
-      .map((item) => {
-        const strong = item.querySelector("strong");
-        return strong ? strong.textContent.trim() : null;
-      })
-      .filter(Boolean);
+  async function handleBtnPin() {
+    // Get current pinned preferences
+    const preferences = await getRequest("/get_preferences");
+    const pinnedSymbols = preferences?.preferences || [];
 
     document.querySelectorAll(".pin-btn").forEach((btn) => {
       const row = btn.closest("tr");
       const symbol = row.children[1].textContent.trim();
       // Nếu đã ghim thì cập nhật trạng thái nút
-      if (pinnedItems.includes(symbol)) {
+      if (pinnedSymbols.includes(symbol)) {
         btn.setAttribute("data-pinned", "true");
         btn.classList.remove("text-gray-400");
         btn.classList.add("text-blue-600");
@@ -383,29 +347,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         btn.classList.add("text-gray-400");
       }
       btn.onclick = async () => {
-        const changeHTML = row.children[4].innerHTML.trim();
-        await handlePinUnpin(btn, symbol, changeHTML);
+        await handlePinUnpin(btn, symbol);
         // Gọi lại handleBtnPin để cập nhật trạng thái tất cả các nút
-        handleBtnPin();
+        await handleBtnPin();
       };
     });
   }
 
-  function renderStocks(stockData, elementInnerHTML = "stockTableBody") {
+  async function renderStocks(stockData, elementInnerHTML = "stockTableBody") {
     const tbody = document.getElementById(elementInnerHTML);
     if (!tbody) return;
     tbody.innerHTML = "";
 
-    // Lấy danh sách mã đã ghim để kiểm tra trạng thái nút pin
-    const pinnedContainer = document.getElementById("pinnedStocks");
-    const pinnedItems = pinnedContainer
-      ? Array.from(pinnedContainer.children)
-          .map((item) => {
-            const strong = item.querySelector("strong");
-            return strong ? strong.textContent.trim() : null;
-          })
-          .filter(Boolean)
-      : [];
+    // Get current pinned preferences
+    const preferences = await getRequest("/get_preferences");
+    const pinnedSymbols = preferences?.preferences || [];
 
     stockData.forEach((stock) => {
       const row = document.createElement("tr");
@@ -437,7 +393,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
 
       // Kiểm tra xem mã này đã được ghim chưa
-      const isPinned = pinnedItems.includes(stock.symbol);
+      const isPinned = pinnedSymbols.includes(stock.symbol);
       const pinButtonClass = isPinned ? "text-blue-600" : "text-gray-400";
 
       row.innerHTML = `
