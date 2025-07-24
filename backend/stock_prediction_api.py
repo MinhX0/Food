@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Body
 from pydantic import BaseModel
 from typing import Optional
 import uvicorn
@@ -8,6 +8,7 @@ import pandas as pd
 # Import the StockPredictor class from the current file
 from stock_prediction_rf import StockPredictor
 from chatgpt_ticker_suggest import get_similar_tickers_from_gemini
+from chatgpt_chatbot import get_stock_chatbot_response
 
 
 
@@ -21,12 +22,23 @@ PREDICTION_CACHE_TTL = 300  # seconds (5 minutes)
 # Cache management function
 def get_cached_prediction(symbol: str, lookback_days: int) -> tuple[dict | None, float | None]:
     cache_key = (symbol, lookback_days)
+    print(f"Looking for cache key: {cache_key}")
+    print(f"Available cache keys: {list(prediction_cache.keys())}")
+    
     if cache_key in prediction_cache:
         result, cached_time = prediction_cache[cache_key]
         now = time.time()
-        if now - cached_time < PREDICTION_CACHE_TTL:
-            print(f"Cache hit for {symbol} (age: {now - cached_time:.1f}s)")
+        age = now - cached_time
+        print(f"Found cache entry for {symbol}, age: {age:.1f}s, TTL: {PREDICTION_CACHE_TTL}s")
+        
+        if age < PREDICTION_CACHE_TTL:
+            print(f"Cache hit for {symbol} (age: {age:.1f}s)")
             return result, cached_time
+        else:
+            print(f"Cache expired for {symbol} (age: {age:.1f}s > TTL: {PREDICTION_CACHE_TTL}s)")
+    else:
+        print(f"No cache entry found for {cache_key}")
+    
     return None, None
 
 def cache_prediction(symbol: str, lookback_days: int, result: dict):
@@ -129,10 +141,16 @@ class PredictionRequest(BaseModel):
 @app.get("/prediction_data")
 def get_prediction_data(symbol: str = Query(..., description="Ticker symbol, e.g. AAPL"), lookback_days: int = Query(130, description="Lookback days for features")):
     try:
+        print(f"Prediction request for {symbol} with {lookback_days} lookback days")
+        
         # Check cache first
-        cached_result, _ = get_cached_prediction(symbol, lookback_days)
+        cached_result, cached_time = get_cached_prediction(symbol, lookback_days)
         if cached_result:
+            print(f"Cache hit! Returning cached prediction for {symbol}")
             return cached_result
+        
+        print(f"Cache miss for {symbol}, computing new prediction...")
+        
         # Not cached or expired, compute prediction
         predictor = StockPredictor(symbol, lookback_days=lookback_days)
         if not predictor.fetch_data():
@@ -309,6 +327,61 @@ def suggest_similar_tickers():
         return {"liked_tickers": liked_tickers, "suggested_tickers": similar_tickers}
     except Exception as e:
         return {"error": str(e), "trace": traceback.format_exc()}
+
+class ChatRequest(BaseModel):
+    message: str
+    user_context: Optional[dict] = None
+
+@app.post("/api/chat", tags=["Chatbot"], summary="Chat with AI about stock market questions")
+def chat_with_ai(request: ChatRequest):
+    """
+    Chat endpoint for stock market questions using Gemini AI.
+    Only responds to stock-related questions in Vietnamese.
+    """
+    try:
+        # Get response from Gemini chatbot
+        response = get_stock_chatbot_response(request.message, request.user_context)
+        
+        return {
+            "success": response["success"],
+            "response": response["response"],
+            "error": response.get("error")
+        }
+    except Exception as e:
+        return {
+            "success": False,
+            "error": str(e),
+            "response": "Xin lỗi, có lỗi xảy ra khi xử lý câu hỏi của bạn. Vui lòng thử lại sau."
+        }
+
+@app.get("/debug/cache_status", tags=["Debug"], summary="Show cache status for debugging")
+def get_cache_status():
+    """
+    Debug endpoint to show what's currently in the prediction cache.
+    """
+    cache_info = []
+    now = time.time()
+    
+    for cache_key, (result, cached_time) in prediction_cache.items():
+        symbol, lookback_days = cache_key
+        age = now - cached_time
+        is_valid = age < PREDICTION_CACHE_TTL
+        
+        cache_info.append({
+            "symbol": symbol,
+            "lookback_days": lookback_days,
+            "cached_time": cached_time,
+            "age_seconds": round(age, 1),
+            "is_valid": is_valid,
+            "ttl_seconds": PREDICTION_CACHE_TTL
+        })
+    
+    return {
+        "cache_count": len(prediction_cache),
+        "cache_ttl": PREDICTION_CACHE_TTL,
+        "current_time": now,
+        "cache_entries": cache_info
+    }
 
 @app.post("/batch_ticker_info")
 def get_batch_ticker_info(symbols: list[str] = Body(..., description="List of ticker symbols")):
