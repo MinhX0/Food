@@ -5,32 +5,9 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler
-import matplotlib.pyplot as plt
-from datetime import  timedelta
+from datetime import timedelta
 import warnings
 warnings.filterwarnings('ignore')
-
-# Thiết lập matplotlib
-import matplotlib
-print(f"Current matplotlib backend: {matplotlib.get_backend()}")
-
-# Thiết lập backend phù hợp
-try:
-    matplotlib.use('Qt5Agg')
-except ImportError:
-    try:
-        matplotlib.use('TkAgg')
-    except ImportError:
-        matplotlib.use('Agg')
-        print("Warning: Using non-interactive backend. Plots may not display.")
-
-# Thiết lập font cho matplotlib để hiển thị tiếng Việt
-# plt.rcParams['font.family'] = ['DejaVu Sans', 'SimHei', 'sans-serif']
-plt.rcParams['axes.unicode_minus'] = False
-plt.rcParams['figure.max_open_warning'] = 50
-
-# Bật interactive mode
-plt.ion()
 
 class StockPredictor:
     def __init__(self, symbol, lookback_days=10):
@@ -302,187 +279,6 @@ class StockPredictor:
         else:
             return "KHÔNG NÊN ĐẦU TƯ - Thị trường có thể dao động trong khoảng hẹp"
     
-    def plot_results(self, prediction):
-        """Vẽ biểu đồ kết quả dự đoán"""
-        try:
-            print("Đang tạo biểu đồ...")
-            
-            # Đóng tất cả các figure cũ
-            plt.close('all')
-            
-            # Tạo figure với nhiều subplot
-            fig, axes = plt.subplots(2, 2, figsize=(15, 12))
-            fig.suptitle(f'Stock Prediction Analysis - {self.symbol}', fontsize=16, fontweight='bold')
-            
-            # 1. Biểu đồ giá và dự đoán
-            ax1 = axes[0, 0]
-            recent_data = self.data.tail(30)
-            
-            if len(recent_data) > 0:
-                ax1.plot(recent_data.index, recent_data['Close'], label='Actual Price', color='blue', linewidth=2)
-                
-                # Kiểm tra MA columns
-                if 'MA_5' in recent_data.columns and not recent_data['MA_5'].isna().all():
-                    ax1.plot(recent_data.index, recent_data['MA_5'], label='MA 5', color='orange', alpha=0.7)
-                if 'MA_10' in recent_data.columns and not recent_data['MA_10'].isna().all():
-                    ax1.plot(recent_data.index, recent_data['MA_10'], label='MA 10', color='green', alpha=0.7)
-                
-                # Thêm điểm dự đoán
-                if prediction and 'predicted_price' in prediction:
-                    next_date = recent_data.index[-1] + timedelta(days=1)
-                    ax1.scatter([next_date], [prediction['predicted_price']], 
-                               color='red', s=100, label=f'Predicted: ${prediction["predicted_price"]:.2f}', zorder=5)
-            
-            ax1.set_title('Price Chart with Prediction')
-            ax1.set_ylabel('Price ($)')
-            ax1.legend()
-            ax1.grid(True, alpha=0.3)
-            
-            # 2. Biểu đồ xác suất
-            ax2 = axes[0, 1]
-            labels = ['Decrease (>1.5%)', 'Stable (±1.5%)', 'Increase (>1.5%)']
-            colors = ['red', 'gray', 'green']
-            
-            if prediction and 'probabilities' in prediction:
-                probs = prediction['probabilities']
-                bars = ax2.bar(labels, probs, color=colors, alpha=0.7)
-                
-                # Thêm giá trị trên các cột
-                for bar, prob in zip(bars, probs):
-                    height = bar.get_height()
-                    ax2.text(bar.get_x() + bar.get_width()/2, height + 0.02,
-                            f'{prob:.1%}', ha='center', va='bottom', fontweight='bold')
-            
-            ax2.set_title('Direction Probability')
-            ax2.set_ylabel('Probability')
-            ax2.set_ylim(0, 1)
-            
-            # 3. Biểu đồ RSI
-            ax3 = axes[1, 0]
-            if 'RSI' in recent_data.columns:
-                recent_rsi = recent_data['RSI'].dropna()
-                if len(recent_rsi) > 0:
-                    ax3.plot(recent_rsi.index, recent_rsi, label='RSI', color='purple', linewidth=2)
-                    ax3.axhline(y=70, color='red', linestyle='--', alpha=0.7, label='Overbought (70)')
-                    ax3.axhline(y=30, color='green', linestyle='--', alpha=0.7, label='Oversold (30)')
-                    ax3.axhline(y=50, color='gray', linestyle='-', alpha=0.5)
-                    ax3.set_ylim(0, 100)
-                    ax3.legend()
-            
-            ax3.set_title('RSI Indicator')
-            ax3.set_ylabel('RSI')
-            ax3.grid(True, alpha=0.3)
-            
-            # 4. Biểu đồ Volume
-            ax4 = axes[1, 1]
-            if 'Volume' in recent_data.columns:
-                recent_volume = recent_data['Volume']
-                # Ensure recent_volume is a 1D numpy array of floats
-                recent_volume = np.asarray(recent_volume).astype(float).flatten()
-
-                # Tạo màu cho volume bars
-                colors_vol = []
-                if 'Returns' in recent_data.columns:
-                    recent_returns = recent_data['Returns']
-                    for ret in recent_returns:
-                        if pd.isna(ret):
-                            colors_vol.append('gray')
-                        elif ret < 0:
-                            colors_vol.append('red')
-                        else:
-                            colors_vol.append('green')
-                else:
-                    colors_vol = ['blue'] * len(recent_volume)
-
-                # Ensure colors_vol matches the length of recent_volume
-                if len(colors_vol) != len(recent_volume):
-                    colors_vol = ['blue'] * len(recent_volume)
-
-                # Vẽ biểu đồ volume
-                bars = ax4.bar(range(len(recent_volume)), recent_volume, color=colors_vol, alpha=0.6)
-
-                # Thiết lập nhãn trục x
-                if len(recent_volume) > 0:
-                    step = max(1, len(recent_volume)//5)
-                    tick_positions = range(0, len(recent_volume), step)
-                    if hasattr(recent_data.index, 'strftime'):
-                        # DatetimeIndex
-                        labels = [recent_data.index[i].strftime('%m-%d') for i in tick_positions]
-                    else:
-                        labels = [str(recent_data.index[i]) for i in tick_positions]
-                    ax4.set_xticks(tick_positions)
-                    ax4.set_xticklabels(labels, rotation=45)
-            
-            ax4.set_title('Volume')
-            ax4.set_ylabel('Volume')
-            ax4.set_xlabel('Days')
-            
-            # Điều chỉnh layout
-            plt.tight_layout()
-            
-            # Hiển thị biểu đồ
-            plt.show()
-            
-            # Dừng một chút để biểu đồ hiển thị
-            plt.pause(0.1)
-            
-            # Tạo biểu đồ thông tin tổng hợp
-            self.plot_summary_info(prediction)
-            
-        except Exception as e:
-            print(f"Lỗi khi vẽ biểu đồ: {e}")
-            import traceback
-            traceback.print_exc()
-    
-    def plot_summary_info(self, prediction):
-        """Vẽ biểu đồ thông tin tổng hợp"""
-        try:
-            print("Đang tạo biểu đồ tổng hợp...")
-            
-            fig, ax = plt.subplots(figsize=(12, 8))
-            
-            # Tạo bảng thông tin
-            info_data = [
-                ['Current Price', f'${prediction["current_price"]:.2f}'],
-                ['Predicted Price', f'${prediction["predicted_price"]:.2f}'],
-                ['Expected Return', f'{prediction["predicted_return"]:.2%}'],
-                ['Confidence', f'{prediction["confidence"]:.2%}'],
-                ['Direction', self.get_direction_text(prediction['direction'])],
-                ['Investment Advice', self.get_investment_advice(prediction)]
-            ]
-            
-            # Tạo bảng
-            table = ax.table(cellText=info_data,
-                            colLabels=['Metric', 'Value'],
-                            cellLoc='center',
-                            loc='center',
-                            colWidths=[0.3, 0.7])
-            
-            table.auto_set_font_size(False)
-            table.set_fontsize(12)
-            table.scale(1.2, 2)
-            
-            # Tô màu header
-            for i in range(2):
-                table[(0, i)].set_facecolor('#40466e')
-                table[(0, i)].set_text_props(weight='bold', color='white')
-            
-            # Tô màu dựa trên hướng dự đoán
-            direction_color = 'lightgreen' if prediction['direction'] == 2 else 'lightcoral' if prediction['direction'] == 0 else 'lightyellow'
-            table[(6, 1)].set_facecolor(direction_color)
-            
-            ax.set_title(f'{self.symbol} - Stock Prediction Summary', fontsize=16, fontweight='bold', pad=20)
-            ax.axis('off')
-            
-            plt.tight_layout()
-            plt.show()
-            plt.pause(0.1)
-            
-        except Exception as e:
-            print(f"Lỗi khi vẽ biểu đồ tổng hợp: {e}")
-            import traceback
-            traceback.print_exc()
-    
     def get_direction_text(self, direction):
         """Chuyển đổi số direction thành text"""
         if direction == 0:
@@ -493,16 +289,16 @@ class StockPredictor:
             return "Increase (Buy)"
     
     def run_prediction(self):
-        """Chạy toàn bộ quy trình dự đoán"""
+        """Chạy toàn bộ quy trình dự đoán (simplified for API use)"""
         print(f"=== DỰ ĐOÁN CỔ PHIẾU {self.symbol} ===")
         
         # Lấy dữ liệu
         if not self.fetch_data():
-            return
+            return None
         
         # Huấn luyện mô hình
         if not self.train_model():
-            return
+            return None
         
         # Dự đoán
         prediction = self.predict_next_day()
@@ -524,17 +320,14 @@ class StockPredictor:
             print(f"\n=== GỢI Ý ĐẦU TƯ ===")
             print(advice)
             
-            # Vẽ biểu đồ
-            print(f"\n=== HIỂN THỊ BIỂU ĐỒ ===")
-            self.plot_results(prediction)
+            print(f"\n=== CẢNH BÁO ===")
+            print("Đây chỉ là mô hình dự đoán dựa trên dữ liệu lịch sử.")
+            print("Không nên sử dụng làm cơ sở duy nhất cho quyết định đầu tư.")
+            print("Luôn cân nhắc nhiều yếu tố khác và có chiến lược quản lý rủi ro.")
             
-            # Giữ biểu đồ mở
-            input("\nNhấn Enter để tiếp tục...")
+            return prediction
         
-        print(f"\n=== CẢNH BÁO ===")
-        print("Đây chỉ là mô hình dự đoán dựa trên dữ liệu lịch sử.")
-        print("Không nên sử dụng làm cơ sở duy nhất cho quyết định đầu tư.")
-        print("Luôn cân nhắc nhiều yếu tố khác và có chiến lược quản lý rủi ro.")
+        return None
 
 # Sử dụng
 if __name__ == "__main__":

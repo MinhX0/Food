@@ -17,7 +17,6 @@ import time
 ticker_data_cache = {}
 # Global cache for prediction results: (symbol, lookback_days) -> (result, timestamp)
 prediction_cache = {}
-PREDICTION_CACHE_TTL = 300  # seconds (5 minutes)
 
 # Cache management function
 def get_cached_prediction(symbol: str, lookback_days: int) -> tuple[dict | None, float | None]:
@@ -29,13 +28,8 @@ def get_cached_prediction(symbol: str, lookback_days: int) -> tuple[dict | None,
         result, cached_time = prediction_cache[cache_key]
         now = time.time()
         age = now - cached_time
-        print(f"Found cache entry for {symbol}, age: {age:.1f}s, TTL: {PREDICTION_CACHE_TTL}s")
-        
-        if age < PREDICTION_CACHE_TTL:
-            print(f"Cache hit for {symbol} (age: {age:.1f}s)")
-            return result, cached_time
-        else:
-            print(f"Cache expired for {symbol} (age: {age:.1f}s > TTL: {PREDICTION_CACHE_TTL}s)")
+        print(f"Cache hit for {symbol} (age: {age:.1f}s) - cache persists until restart")
+        return result, cached_time
     else:
         print(f"No cache entry found for {cache_key}")
     
@@ -47,8 +41,8 @@ def cache_prediction(symbol: str, lookback_days: int, result: dict):
     prediction_cache[cache_key] = (result, now)
     print(f"Cached prediction for {symbol}")
 
-DEFAULT_TICKERS = ["VCB.VN", "VIC.VN", "VHM.VN", "HPG.VN", "FPT.VN", "BID.VN", "GAS.VN", "VNM.VN", "TCB.VN", "CTG.VN", "VPB.VN", "MBB.VN", "ACB.VN", "MSN.VN", "MWG.VN", "GVR.VN", "STB.VN", "HDB.VN", "SSI.VN", "VRE.VN", "SAB.VN", "PLX.VN", "VJC.VN", "TPB.VN", "POW.VN", "DGC.VN", "PNJ.VN", "BVH.VN", "REE.VN", "KDH.VN", "EIB.VN", "OCB.VN", "MSB.VN", "LPB.VN", "SHB.VN", "VIB.VN", "PDR.VN", "DXG.VN", "HSG.VN", "PC1.VN", ]
-# DEFAULT_TICKERS = ["VCB.VN", "VIC.VN", "VHM.VN", ]
+# DEFAULT_TICKERS = ["VCB.VN", "VIC.VN", "VHM.VN", "HPG.VN", "FPT.VN", "BID.VN", "GAS.VN", "VNM.VN", "TCB.VN", "CTG.VN", "VPB.VN", "MBB.VN", "ACB.VN", "MSN.VN", "MWG.VN", "GVR.VN", "STB.VN", "HDB.VN", "SSI.VN", "VRE.VN", "SAB.VN", "PLX.VN", "VJC.VN", "TPB.VN", "POW.VN", "DGC.VN", "PNJ.VN", "BVH.VN", "REE.VN", "KDH.VN", "EIB.VN", "OCB.VN", "MSB.VN", "LPB.VN", "SHB.VN", "VIB.VN", "PDR.VN", "DXG.VN", "HSG.VN", "PC1.VN", ]
+DEFAULT_TICKERS = ["VCB.VN", "VIC.VN", "VHM.VN" ]
 # CSV file paths
 USER_PREF_CSV = "user_preferences.csv"
 
@@ -365,20 +359,19 @@ def get_cache_status():
     for cache_key, (result, cached_time) in prediction_cache.items():
         symbol, lookback_days = cache_key
         age = now - cached_time
-        is_valid = age < PREDICTION_CACHE_TTL
         
         cache_info.append({
             "symbol": symbol,
             "lookback_days": lookback_days,
             "cached_time": cached_time,
             "age_seconds": round(age, 1),
-            "is_valid": is_valid,
-            "ttl_seconds": PREDICTION_CACHE_TTL
+            "is_valid": True,  # Always valid since no TTL
+            "note": "Cache persists until server restart"
         })
     
     return {
         "cache_count": len(prediction_cache),
-        "cache_ttl": PREDICTION_CACHE_TTL,
+        "cache_policy": "Persistent until restart",
         "current_time": now,
         "cache_entries": cache_info
     }
