@@ -16,11 +16,23 @@ async function updatePriceTicker() {
     response.tickers.forEach(ticker => {
       if (ticker.price !== null && ticker.change_percent !== null) {
         const price = parseFloat(ticker.price);
-        const formattedPrice = price.toLocaleString('en-US', {
-          style: 'currency',
-          currency: ticker.symbol.toLowerCase().endsWith('.vn') ? 'VND' : 'USD',
-          maximumFractionDigits: ticker.symbol.toLowerCase().endsWith('.vn') ? 0 : 2
-        });
+        
+        // Use formatted price from API if available, otherwise format it ourselves
+        let formattedPrice;
+        if (ticker.formatted_price) {
+          formattedPrice = ticker.formatted_price;
+        } else {
+          // Fallback formatting
+          const currency = ticker.currency || (ticker.symbol.toLowerCase().endsWith('.vn') ? 'VND' : 'USD');
+          if (currency === 'VND') {
+            formattedPrice = `${price.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫`;
+          } else if (currency === 'USD') {
+            formattedPrice = `$${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+          } else {
+            formattedPrice = `${price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} ${currency}`;
+          }
+        }
+        
         const changeSign = ticker.change_percent >= 0 ? '▲' : '▼';
         const direction = ticker.change_percent >= 0 ? 'UP' : 'DOWN';
         const tickerClass = ticker.change_percent >= 0 ? 'up' : 'down';
@@ -28,6 +40,7 @@ async function updatePriceTicker() {
         tickerContent += `
           <div class="ticker-item ${tickerClass}">
             <span class="symbol">${ticker.symbol}</span>
+            <span class="price">${formattedPrice}</span>
             <span class="arrow">${changeSign}</span>
             <span>${direction} (${Math.abs(ticker.change_percent).toFixed(2)}%)</span>
           </div>`;
@@ -171,11 +184,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       }</td>
       <td class="px-4 py-2 text-center align-middle" style="width:120px">${
         obj && obj.price != null
-          ? obj.price.toLocaleString('en-US', {
-              style: 'currency',
-              currency: obj.symbol.toLowerCase().endsWith(".vn") ? 'VND' : 'USD',
-              maximumFractionDigits: obj.symbol.toLowerCase().endsWith(".vn") ? 0 : 2
-            })
+          ? (obj.formatted_price || 
+             (obj.currency === 'VND' ? 
+              `${obj.price.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫` : 
+              `$${obj.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`))
           : "N/A"
       }</td>
       <td class="px-4 py-2 ${changeColor} text-center align-middle" style="width:120px">${changeDisplay}</td>
@@ -410,11 +422,10 @@ document.addEventListener("DOMContentLoaded", async () => {
       }</td>
       <td class="px-4 py-2 text-center align-middle" style="width:120px">${
         stock && stock.price != null
-          ? stock.price.toLocaleString('en-US', {
-              style: 'currency',
-              currency: stock.symbol.toLowerCase().endsWith(".vn") ? 'VND' : 'USD',
-              maximumFractionDigits: stock.symbol.toLowerCase().endsWith(".vn") ? 0 : 2
-            })
+          ? (stock.formatted_price || 
+             (stock.currency === 'VND' ? 
+              `${stock.price.toLocaleString('vi-VN', { maximumFractionDigits: 0 })} ₫` : 
+              `$${stock.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`))
           : "N/A"
       }</td>
       <td class="px-4 py-2 ${changeColor} text-center align-middle" style="width:120px">${changeDisplay}</td>

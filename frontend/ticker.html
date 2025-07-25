@@ -180,6 +180,21 @@
           
           <!-- End of Charts Section -->
           <div class="mt-8">
+            <!-- Price Information Block -->
+            <div id="price-info" class="mb-6 bg-gray-800 rounded-lg shadow-md p-6 border border-gray-700">
+              <h3 class="text-xl font-semibold mb-4 text-blue-400">Thông tin giá</h3>
+              <div class="grid grid-cols-2 gap-4">
+                <div class="p-4 bg-gray-900 rounded-lg border border-gray-700">
+                  <div class="text-sm text-gray-400">Giá hiện tại</div>
+                  <div id="current-price-value" class="text-lg font-semibold text-gray-200"></div>
+                </div>
+                <div class="p-4 bg-gray-900 rounded-lg border border-gray-700">
+                  <div class="text-sm text-gray-400">Giá dự đoán</div>
+                  <div id="predicted-price-value" class="text-lg font-semibold text-gray-200"></div>
+                </div>
+              </div>
+            </div>
+            
             <!-- Prediction Stats Block -->
             <div id="prediction-stats" class="mb-6 bg-gray-800 rounded-lg shadow-md p-6 border border-gray-700">
               <h3 class="text-xl font-semibold mb-4 text-green-400">Chỉ số dự đoán</h3>
@@ -211,6 +226,7 @@
     <div id="spinner-placeholder"></div>
 
     <script src="api.js"></script>
+    <script src="currency-utils.js"></script>
     <script src="chatbot.js"></script>
     <script src="components.js"></script>
     <script>
@@ -291,6 +307,24 @@
             document.getElementById("stable-value").innerText = (predictionResponse.probabilities[1] * 100).toFixed(1) + "%";
             document.getElementById("text-note").innerText = predictionResponse.advice;
 
+            // Update price information
+            const currentPriceElement = document.getElementById("current-price-value");
+            const predictedPriceElement = document.getElementById("predicted-price-value");
+            
+            if (currentPriceElement) {
+              currentPriceElement.innerText = predictionResponse.formatted_current_price || 
+                (predictionResponse.current_price ? 
+                  formatCurrency(predictionResponse.current_price, predictionResponse.currency || getCurrencyFromSymbol(ticker)) : 
+                  'N/A');
+            }
+            
+            if (predictedPriceElement) {
+              predictedPriceElement.innerText = predictionResponse.formatted_predicted_price || 
+                (predictionResponse.predicted_price ? 
+                  formatCurrency(predictionResponse.predicted_price, predictionResponse.currency || getCurrencyFromSymbol(ticker)) : 
+                  'N/A');
+            }
+
             // Update chart
             if (mainChart) {
               mainChart.destroy();
@@ -364,7 +398,14 @@
                         if (context.dataset.yAxisID === 'volume') {
                           label += context.parsed.y.toLocaleString();
                         } else {
-                          label += context.parsed.y.toLocaleString() + ' VND';
+                          // Use currency formatting based on symbol
+                          const symbol = new URLSearchParams(window.location.search).get('symbol') || '';
+                          const currency = symbol.toUpperCase().endsWith('.VN') ? 'VND' : 'USD';
+                          if (currency === 'VND') {
+                            label += context.parsed.y.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫';
+                          } else {
+                            label += '$' + context.parsed.y.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                          }
                         }
                         return label;
                       }
@@ -377,13 +418,23 @@
                     position: 'left',
                     title: {
                       display: true,
-                      text: 'Giá (VND)',
+                      text: function() {
+                        const symbol = new URLSearchParams(window.location.search).get('symbol') || '';
+                        const currency = symbol.toUpperCase().endsWith('.VN') ? 'VND' : 'USD';
+                        return `Giá (${currency})`;
+                      }(),
                       color: '#9ca3af'
                     },
                     ticks: {
                       color: '#9ca3af',
                       callback: function(value) {
-                        return value.toLocaleString() + ' VND';
+                        const symbol = new URLSearchParams(window.location.search).get('symbol') || '';
+                        const currency = symbol.toUpperCase().endsWith('.VN') ? 'VND' : 'USD';
+                        if (currency === 'VND') {
+                          return value.toLocaleString('vi-VN', { maximumFractionDigits: 0 }) + ' ₫';
+                        } else {
+                          return '$' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+                        }
                       }
                     },
                     grid: {

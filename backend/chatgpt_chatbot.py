@@ -1,31 +1,6 @@
 from google import genai
 from google.genai import types
-import os
-import ast
-import re
 import traceback
-from dotenv import load_dotenv
-
-# Load environment variables
-load_dotenv()
-
-# Configure Gemini API
-def configure_gemini()->genai.Client:
-    """Configure Gemini API with the API key from environment variables"""
-    try:
-        # Use the provided API key directly
-        api_key = os.getenv("GOOGLE_GEMINI_API_KEY", "AIzaSyALbt9ylByGrIC2Ju8i_hQq4_Mb5LLr7YQ")
-
-        client = genai.Client(api_key=api_key)
-
-        if not api_key:
-            print("Warning: GEMINI_API_KEY not found")
-            return False
-            
-        return client
-    except Exception as e:
-        print(f"Error configuring Gemini API: {e}")
-        return False
 
 def get_stock_chatbot_response(user_message: str, user_context: dict = None) -> dict:
     """
@@ -40,7 +15,7 @@ def get_stock_chatbot_response(user_message: str, user_context: dict = None) -> 
     """
     try:
         # Get API key and create client
-        api_key = os.getenv("GOOGLE_GEMINI_API_KEY", "AIzaSyALbt9ylByGrIC2Ju8i_hQq4_Mb5LLr7YQ")
+        api_key = "AIzaSyALbt9ylByGrIC2Ju8i_hQq4_Mb5LLr7YQ"
         client = genai.Client(api_key=api_key)
         
         # Create a stock market focused system prompt in Vietnamese

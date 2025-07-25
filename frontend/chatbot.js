@@ -145,7 +145,7 @@ function createChatbotUI() {
                 const priceInfo = `
                     <div class="font-semibold text-lg mb-2">${data.symbol} - ${data.company_name || 'Thông tin cổ phiếu'}</div>
                     <div class="space-y-1">
-                        <div>💰 <strong>Giá:</strong> ${data.price ? data.price.toLocaleString() + ' VND' : 'Không có'}</div>
+                        <div>💰 <strong>Giá:</strong> ${data.formatted_price || (data.price ? data.price.toLocaleString() + ' VND' : 'Không có')}</div>
                         <div class="${changeColor}">
                             ${changeIcon} <strong>Thay đổi:</strong> ${data.change_percent ? data.change_percent.toFixed(2) + '%' : 'Không có'}
                         </div>
@@ -213,7 +213,7 @@ function createChatbotUI() {
                 const prediction = `
                     <div class="font-semibold text-lg mb-2">🔮 Dự đoán AI cho ${symbol.toUpperCase()}</div>
                     <div class="space-y-1">
-                        <div>💰 <strong>Giá dự đoán:</strong> ${data.predicted_price.toLocaleString()} VND</div>
+                        <div>💰 <strong>Giá dự đoán:</strong> ${data.formatted_predicted_price || (data.predicted_price ? data.predicted_price.toLocaleString() + ' VND' : 'Không có')}</div>
                         <div>📈 <strong>Xu hướng:</strong> ${data.direction}</div>
                         <div>📊 <strong>Độ tin cậy:</strong> ${(data.probabilities[2] * 100).toFixed(1)}% (Tăng giá)</div>
                     </div>

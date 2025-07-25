@@ -60,6 +60,73 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Helper function to get currency for a symbol
+def get_currency_for_symbol(symbol):
+    """Determine the currency based on the stock symbol"""
+    if symbol.upper().endswith('.VN'):
+        return 'VND'
+    elif symbol.upper().endswith('.HK'):
+        return 'HKD'
+    elif symbol.upper().endswith('.L') or symbol.upper().endswith('.LON'):
+        return 'GBP'
+    elif symbol.upper().endswith('.TO') or symbol.upper().endswith('.TSE'):
+        return 'CAD'
+    elif symbol.upper().endswith('.SI'):
+        return 'SGD'
+    elif symbol.upper().endswith('.AX'):
+        return 'AUD'
+    elif symbol.upper().endswith('.T') or symbol.upper().endswith('.JP'):
+        return 'JPY'
+    elif symbol.upper().endswith('.DE') or symbol.upper().endswith('.F'):
+        return 'EUR'
+    elif symbol.upper().endswith('.PA'):
+        return 'EUR'
+    elif symbol.upper().endswith('.SW'):
+        return 'CHF'
+    else:
+        # Default to USD for US stocks and others
+        return 'USD'
+
+# Helper function to format price with currency
+def format_price_with_currency(price, currency):
+    """Format price based on currency"""
+    if price is None:
+        return None
+    
+    if currency == 'VND':
+        # Vietnamese Dong - no decimal places
+        return f"{price:,.0f} ₫"
+    elif currency == 'JPY':
+        # Japanese Yen - no decimal places
+        return f"¥{price:,.0f}"
+    elif currency == 'USD':
+        # US Dollar - 2 decimal places
+        return f"${price:,.2f}"
+    elif currency == 'EUR':
+        # Euro - 2 decimal places
+        return f"€{price:,.2f}"
+    elif currency == 'GBP':
+        # British Pound - 2 decimal places
+        return f"£{price:,.2f}"
+    elif currency == 'CAD':
+        # Canadian Dollar - 2 decimal places
+        return f"C${price:,.2f}"
+    elif currency == 'AUD':
+        # Australian Dollar - 2 decimal places
+        return f"A${price:,.2f}"
+    elif currency == 'HKD':
+        # Hong Kong Dollar - 2 decimal places
+        return f"HK${price:,.2f}"
+    elif currency == 'SGD':
+        # Singapore Dollar - 2 decimal places
+        return f"S${price:,.2f}"
+    elif currency == 'CHF':
+        # Swiss Franc - 2 decimal places
+        return f"CHF{price:,.2f}"
+    else:
+        # Default formatting - 2 decimal places
+        return f"{price:,.2f} {currency}"
+
 # Endpoint: Get all tickers with current price and up/down indicator
 @app.get("/ticker_status") 
 def get_ticker_status():
@@ -76,13 +143,15 @@ def get_ticker_status():
         if df is None or df.empty or 'Close' not in df.columns:
             predictor = StockPredictor(symbol)
             if not predictor.fetch_data():
-                result.append({"symbol": symbol, "price": None, "indicator": "unknown", "company_name": company_name})
+                currency = get_currency_for_symbol(symbol)
+                result.append({"symbol": symbol, "price": None, "indicator": "unknown", "company_name": company_name, "currency": currency, "formatted_price": None})
                 continue
             df = predictor.data
             if df is not None and not df.empty and 'Close' in df.columns:
                 ticker_data_cache[symbol] = df.copy()
             else:
-                result.append({"symbol": symbol, "price": None, "indicator": "unknown", "company_name": company_name})
+                currency = get_currency_for_symbol(symbol)
+                result.append({"symbol": symbol, "price": None, "indicator": "unknown", "company_name": company_name, "currency": currency, "formatted_price": None})
                 continue
         # Now df should be valid
         try:
@@ -116,12 +185,19 @@ def get_ticker_status():
                 indicator = "no_change"
         else:
             indicator = "unknown"
+        
+        # Get currency and format price
+        currency = get_currency_for_symbol(symbol)
+        formatted_price = format_price_with_currency(price, currency)
+        
         result.append({
             "symbol": symbol,
             "price": price,
             "indicator": indicator,
             "company_name": company_name,
-            "change_percent": change_percent
+            "change_percent": change_percent,
+            "currency": currency,
+            "formatted_price": formatted_price
         })    
     return {"tickers": result}
 
@@ -160,6 +236,12 @@ def get_prediction_data(symbol: str = Query(..., description="Ticker symbol, e.g
             company_name = symbol
         advice = predictor.get_investment_advice(prediction)
         direction_text = predictor.get_direction_text(prediction['direction'])
+        
+        # Get currency and format prices
+        currency = get_currency_for_symbol(symbol)
+        formatted_current_price = format_price_with_currency(prediction['current_price'], currency)
+        formatted_predicted_price = format_price_with_currency(prediction['predicted_price'], currency)
+        
         result = {
             "symbol": symbol,
             "company_name": company_name,
@@ -169,7 +251,10 @@ def get_prediction_data(symbol: str = Query(..., description="Ticker symbol, e.g
             "direction": direction_text,
             "confidence": prediction['confidence'],
             "probabilities": list(prediction['probabilities']),
-            "advice": advice
+            "advice": advice,
+            "currency": currency,
+            "formatted_current_price": formatted_current_price,
+            "formatted_predicted_price": formatted_predicted_price
         }
         # Cache the prediction result
         cache_prediction(symbol, lookback_days, result)
@@ -221,6 +306,12 @@ def prefetch_ticker_data():
                             company_name = symbol
                         advice = predictor.get_investment_advice(prediction)
                         direction_text = predictor.get_direction_text(prediction['direction'])
+                        
+                        # Get currency and format prices
+                        currency = get_currency_for_symbol(symbol)
+                        formatted_current_price = format_price_with_currency(prediction['current_price'], currency)
+                        formatted_predicted_price = format_price_with_currency(prediction['predicted_price'], currency)
+                        
                         result = {
                             "symbol": symbol,
                             "company_name": company_name,
@@ -230,7 +321,10 @@ def prefetch_ticker_data():
                             "direction": direction_text,
                             "confidence": prediction['confidence'],
                             "probabilities": list(prediction['probabilities']),
-                            "advice": advice
+                            "advice": advice,
+                            "currency": currency,
+                            "formatted_current_price": formatted_current_price,
+                            "formatted_predicted_price": formatted_predicted_price
                         }
                         # Cache the prediction with default lookback days
                         cache_prediction(symbol, 130, result)

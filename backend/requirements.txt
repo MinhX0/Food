@@ -3,6 +3,4 @@ scikit-learn
 pandas
 fastapi
 uvicorn
-openai
-python-dotenv
-genai
+google-genai

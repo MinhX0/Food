@@ -5,7 +5,6 @@ from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score, classification_report
 from sklearn.preprocessing import StandardScaler
-from datetime import timedelta
 import warnings
 warnings.filterwarnings('ignore')
 
